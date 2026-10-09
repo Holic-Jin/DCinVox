@@ -15,7 +15,7 @@ cd "$WORK/ffmpeg-$VER"
 ./configure \
   --target-os=mingw32 --arch=x86_64 --cross-prefix=x86_64-w64-mingw32- \
   --disable-gpl --disable-nonfree --disable-autodetect \
-  --enable-mediafoundation \
+  --enable-mediafoundation --enable-d3d11va \
   --enable-static --disable-shared --extra-ldflags="-static" \
   --disable-doc --disable-debug --disable-ffplay --disable-ffprobe --disable-network \
   --disable-everything \

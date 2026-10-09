@@ -13,6 +13,7 @@ case "$ARCH" in
   arm64) TARGET=aarch64-apple-darwin ;;
   x86_64) TARGET=x86_64-apple-darwin ;;
 esac
+mkdir -p "$ROOT/third_party"
 [ -f "$SRC_TAR" ] || curl -fL --retry 3 -o "$SRC_TAR" "https://ffmpeg.org/releases/ffmpeg-$VER.tar.xz"
 rm -rf "$WORK" && mkdir -p "$WORK"
 tar -xf "$SRC_TAR" -C "$WORK"
