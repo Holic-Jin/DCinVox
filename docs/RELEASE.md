@@ -6,9 +6,9 @@
 | 1 | **Steamworks 파트너 가입** (partner.steamgames.com) | 앱당 US$100 (매출 $1,000 넘으면 환급) | 세금·은행 정보 입력, 본인 확인. 승인까지 며칠 |
 | 2 | 스토어 페이지 작성 | — | `docs/STORE.md` 문구 사용. 출시 최소 2주 전 "곧 출시" 공개 필요 |
 | 3 | Content Survey의 **AI 콘텐츠 공개** 작성 | — | `docs/STORE.md`의 초안 사용 |
-| 4 | **Apple Developer Program** 가입 | 연 US$99 | macOS 서명·공증용. 없으면 macOS에서 "확인되지 않은 개발자" 경고로 실행이 막힘 |
+| 4 | ~~Apple Developer Program~~ | — | **Steam으로만 배포하면 불필요.** Steam으로 설치한 파일은 macOS 차단 표시가 붙지 않고, 앱은 기본(ad-hoc) 서명돼 있음. Steam 밖(홈페이지 등)에서도 배포할 때만 필요 (연 US$99) |
 | 5 | (선택) Windows 코드서명 인증서 | 연 수십~수백 달러 | Steam으로만 배포하면 생략 가능 (Steam이 실행하므로 SmartScreen 경고가 대체로 안 뜸) |
-| 6 | **GitHub 저장소 만들기** (비공개 권장) | 무료 | Windows 빌드를 GitHub Actions에서 함. 만들면 알려 주세요 → 연결·첫 빌드 |
+| 6 | ~~GitHub 저장소~~ ✅ | 무료 | github.com/Holic-Jin/DCinVox (비공개). Actions에서 Windows·macOS 빌드 성공 |
 | 7 | EULA 법률 검토 | — | `docs/EULA.md`는 초안 |
 | 8 | 스토어 이미지·예고편 | — | 직접 촬영했거나 허락받은 소재만 |
 
