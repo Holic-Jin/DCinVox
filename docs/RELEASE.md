@@ -12,6 +12,11 @@
 | 7 | EULA 법률 검토 | — | `docs/EULA.md`는 초안 |
 | 8 | 스토어 이미지·예고편 | — | 직접 촬영했거나 허락받은 소재만 |
 
+## A-2. Steamworks 설치 설정 (Windows)
+- **Installation → Redistributables**: `Visual C++ Redist 2015-2022 (x64)` 체크 → Steam이 설치 때 자동으로 깔아 줌 (dcinvox.exe가 MSVCP140.dll 필요)
+- WebView2: Windows 11은 기본 탑재, Windows 10도 대부분 이미 있음. 실제 PC 확인 필요 (없으면 Microsoft WebView2 Evergreen 설치 프로그램을 Steam 설치 스크립트로 추가)
+- DirectML.dll: Windows 10 1903 이상 기본 탑재. 실제 PC 확인 필요
+
 ## B. 빌드 (자동화됨)
 - macOS: `tools/build_ffmpeg_macos.sh` → `cargo tauri build --bundles app`
 - Windows: `.github/workflows/build.yml` (GitHub Actions, windows-latest)

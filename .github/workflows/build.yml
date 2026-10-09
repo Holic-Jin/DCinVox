@@ -51,6 +51,13 @@ jobs:
           cp src-tauri/target/release/dcinvox.exe dist/
           cp src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe dist/ffmpeg.exe
           cp docs/THIRD_PARTY_NOTICES.md docs/EULA.md dist/
+      # 실행 점검: DLL이 다 로드되고 동봉 ffmpeg가 도는지 (모델은 저장소에 없어서 모델 항목은 실패가 정상)
+      - name: Smoke test (--self-check)
+        shell: bash
+        run: |
+          out="$(./dist/dcinvox.exe --self-check 2>&1 || true)"
+          echo "$out"
+          echo "$out" | grep -q "ffmpeg: .* OK"
       - uses: actions/upload-artifact@v4
         with:
           name: DCinVox-windows
