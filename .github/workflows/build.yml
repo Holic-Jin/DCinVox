@@ -1,0 +1,87 @@
+# Windows·macOS 배포용 빌드. 결과물(실행파일 + ffmpeg)은 Actions 아티팩트로 내려받아 Steam depot에 넣음.
+# 모델 파일(1.4GB)은 저장소에 넣지 않고 depot을 만들 때 로컬 models/ 폴더를 함께 올림.
+name: build
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  ffmpeg-windows:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe
+          key: ffmpeg-win-${{ hashFiles('tools/build_ffmpeg_windows_cross.sh') }}
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 nasm
+          tools/build_ffmpeg_windows_cross.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-windows
+          path: src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe
+
+  windows:
+    needs: ffmpeg-windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ffmpeg-windows
+          path: src-tauri/binaries
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+      - name: Build (CPU 음성 인식 — 느려도 품질은 같음)
+        working-directory: src-tauri
+        run: cargo tauri build --no-bundle
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp src-tauri/target/release/dcinvox.exe dist/
+          cp src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe dist/ffmpeg.exe
+          cp docs/THIRD_PARTY_NOTICES.md docs/EULA.md dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DCinVox-windows
+          path: dist
+
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: src-tauri/binaries/ffmpeg-aarch64-apple-darwin
+          key: ffmpeg-mac-${{ hashFiles('tools/build_ffmpeg_macos.sh') }}
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: tools/build_ffmpeg_macos.sh
+      - name: Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+      - name: Build
+        working-directory: src-tauri
+        run: cargo tauri build --bundles app
+      - name: Collect
+        run: |
+          mkdir -p dist
+          cp -R src-tauri/target/release/bundle/macos/DCinVox.app dist/
+          cp docs/THIRD_PARTY_NOTICES.md docs/EULA.md dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DCinVox-macos
+          path: dist

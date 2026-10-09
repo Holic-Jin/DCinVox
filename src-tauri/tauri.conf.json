@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DCinVox",
+  "version": "0.1.0",
+  "identifier": "com.holicjin.dcinvox",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "DCinVox",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app",
+      "nsis"
+    ],
+    "publisher": "HolicJin",
+    "copyright": "© HolicJin",
+    "icon": [
+      "icons/icon.png"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "offlineInstaller"
+      }
+    },
+    "externalBin": [
+      "binaries/ffmpeg"
+    ],
+    "category": "Music",
+    "shortDescription": "영상 속 목소리로 합성 노래 만들기",
+    "longDescription": "영상에서 말소리를 음절 단위로 찾아 가사대로 이어 붙이고, 음계 블록으로 음을 바꿔 노래로 만드는 프로그램",
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
+  }
+}

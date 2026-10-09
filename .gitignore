@@ -1,0 +1,8 @@
+models/*.bin
+models/*.onnx
+third_party/*.tar.xz
+samples/
+src-tauri/binaries/
+.DS_Store
+steam/content/
+steam/output/

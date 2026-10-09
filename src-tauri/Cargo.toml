@@ -1,0 +1,52 @@
+[package]
+name = "dcinvox"
+version = "0.1.0"
+description = "DCinVox - 영상 속 목소리로 합성 노래 만들기"
+authors = ["HolicJin"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.40", features = ["bundled"] }
+hound = "3"
+# WORLD 보코더 (음높이 교체·모음 늘이기). WORLD 본체는 modified-BSD, 바인딩은 MIT
+rsworld = "0.1"
+rsworld-sys = "0.1"
+# 반주 분석(빠르기·조성)용 FFT, MIDI 읽기/쓰기
+rustfft = "6"
+midly = "0.5"
+# 음소 강제정렬 모델 실행 (ONNX Runtime 정적 링크 → 별도 설치 불필요)
+ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "download-binaries", "tls-native"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+whisper-rs = { version = "0.16", features = ["metal"] }
+
+[target.'cfg(not(target_os = "macos"))'.dependencies]
+# 기본은 CPU (느려도 결과 품질은 같음). Vulkan SDK가 있는 빌드 환경이면 --features vulkan 으로 GPU 가속
+whisper-rs = { version = "0.16" }
+
+[features]
+vulkan = ["whisper-rs/vulkan"]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+
+# 개발 빌드에서도 whisper.cpp·SQLite는 최적화 (디버그 빌드는 수십 배 느림)
+[profile.dev.package.whisper-rs-sys]
+opt-level = 3
+
+[profile.dev.package.libsqlite3-sys]
+opt-level = 3
+
+[profile.dev.package.rsworld-sys]
+opt-level = 3
