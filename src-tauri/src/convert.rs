@@ -450,7 +450,7 @@ const MR_TARGET_RMS: f64 = 0.07;
 /// 목소리(모노) + 반주(스테레오) → 스테레오 섞은 소리 (L, R 번갈아). 길이는 노래 길이
 pub fn mix_with_mr(root: &Path, vocal: &[f32], mr: &song::Mr) -> Result<Vec<f32>, String> {
     let path = root.join(project::CACHE_DIR).join(MR_CACHE);
-    let mut r = hound::WavReader::open(&path).map_err(|e| format!("반주 읽기 실패: {e}"))?;
+    let mut r = hound::WavReader::open(&path).map_err(|e| tr!("mr_read_failed", e))?;
     let samples: Vec<f32> = r.samples::<i16>().map(|v| v.map(|x| x as f32 / 32768.0)).collect::<Result<_, _>>().map_err(|e| e.to_string())?;
     let frames = samples.len() / 2;
     let rms = (samples.iter().map(|v| (*v as f64).powi(2)).sum::<f64>() / samples.len().max(1) as f64).sqrt();

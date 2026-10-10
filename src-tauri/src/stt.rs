@@ -47,7 +47,7 @@ impl Recognizer {
             ..Default::default()
         });
         let ctx = WhisperContext::new_with_params(model, params)
-            .map_err(|e| format!("음성 인식 모델 로드 실패: {e}"))?;
+            .map_err(|e| tr!("stt_model_failed", e))?;
         Ok(Self { ctx })
     }
 
@@ -96,9 +96,9 @@ impl Recognizer {
         let mut state = self.ctx.create_state().map_err(|e| e.to_string())?;
         let result = state.full(params, pcm);
         if cancel.load(Ordering::Relaxed) {
-            return Err(CANCELLED.into());
+            return Err(tr!("cancelled").into());
         }
-        result.map_err(|e| format!("음성 인식 실패: {e}"))?;
+        result.map_err(|e| tr!("stt_failed", e))?;
 
         let lang = whisper_rs::get_lang_str(state.full_lang_id_from_state()).unwrap_or("").to_string();
         let eot = self.ctx.token_eot();
@@ -128,7 +128,6 @@ impl Recognizer {
     }
 }
 
-pub const CANCELLED: &str = "취소됨";
 
 /// 사람이 말할 수 없는 속도(글자/초)의 문장은 Whisper 반복 환각으로 보고 버린다.
 /// 한국어·일본어 빠른 말도 초당 10~12글자 안팎이라 25면 넉넉한 기준.
@@ -217,10 +216,10 @@ fn clean_word(s: &str) -> String {
 
 /// 16kHz mono WAV 읽기
 pub fn read_wav(path: &Path) -> Result<Vec<f32>, String> {
-    let mut reader = hound::WavReader::open(path).map_err(|e| format!("WAV 읽기 실패: {e}"))?;
+    let mut reader = hound::WavReader::open(path).map_err(|e| tr!("wav_read_failed", e))?;
     let spec = reader.spec();
     if spec.channels != 1 || spec.sample_rate != SAMPLE_RATE {
-        return Err(format!("16kHz mono WAV가 아닙니다 ({}Hz, {}ch)", spec.sample_rate, spec.channels));
+        return Err(tr!("wav_not_16k", spec.sample_rate, spec.channels));
     }
     match spec.sample_format {
         hound::SampleFormat::Int => reader

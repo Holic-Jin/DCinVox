@@ -2,9 +2,7 @@
 // 음은 현재 키의 7음(도레미파솔라시)에만 놓이므로 어떻게 옮겨도 음이 틀리지 않는다.
 // app.js의 state·$·invoke·toast·resetStepsFrom·playRange·loadConverted를 사용.
 
-const DEG_NAMES = ["도", "레", "미", "파", "솔", "라", "시"];
 const MAJOR_STEPS = [0, 2, 4, 5, 7, 9, 11];
-const KEY_LABELS = ["C (다장조)", "C♯", "D (라장조)", "E♭", "E (마장조)", "F (바장조)", "F♯", "G (사장조)", "A♭", "A (가장조)", "B♭", "B (나장조)"];
 const TOP_DEG = 9; // 높은 레
 const BOTTOM_DEG = -4; // 낮은 파
 const ROW_H = 16;
@@ -12,8 +10,6 @@ const PX_BEAT = 48;
 const LABEL_W = 40;
 const LEAD_IN = 0.3; // convert.rs의 LEAD_IN과 같아야 재생 커서가 맞음 (반주가 있으면 반주의 노래 시작 위치)
 const songLead = (song) => song.mr ? Math.max(0, song.mr.start - (song.mr.skip ?? 0)) : LEAD_IN;
-const KEY_NAMES = ["다장조(C)", "C♯장조", "라장조(D)", "E♭장조", "마장조(E)", "바장조(F)", "F♯장조", "사장조(G)", "A♭장조", "가장조(A)", "B♭장조", "나장조(B)"];
-const MINOR_NAMES = ["다단조(Cm)", "C♯단조", "라단조(Dm)", "E♭단조", "마단조(Em)", "바단조(Fm)", "F♯단조", "사단조(Gm)", "G♯단조", "가단조(Am)", "B♭단조", "나단조(Bm)"];
 
 let selectedNote = null;
 let undoStack = [];
@@ -60,7 +56,7 @@ function beep(midi) {
 }
 
 function degLabel(d) {
-  const name = DEG_NAMES[((d % 7) + 7) % 7];
+  const name = degNames()[((d % 7) + 7) % 7];
   return d < 0 ? `${name}↓` : d >= 7 ? `${name}↑` : name;
 }
 
@@ -101,8 +97,10 @@ function syncControls() {
   const song = curSong();
   if (!song) return;
   const keySel = $("#key");
-  if (!keySel.options.length) {
-    KEY_LABELS.forEach((label, i) => keySel.add(new Option(label, i)));
+  if (keySel.dataset.lang !== LANG) {
+    keySel.replaceChildren();
+    for (let i = 0; i < 12; i++) keySel.add(new Option(keyName(i), i));
+    keySel.dataset.lang = LANG;
   }
   keySel.value = song.key;
   $("#bpm").value = song.bpm;
@@ -110,9 +108,9 @@ function syncControls() {
   $("#flat").checked = song.flat;
   $("#mr-bar").hidden = !song.mr;
   if (song.mr) {
-    const detected = song.mr.minor ? MINOR_NAMES[song.mr.tonic] : KEY_NAMES[song.mr.tonic];
-    $("#mr-info").textContent = `반주: ${song.mr.file} · 감지 ${Math.round(song.mr.detected_bpm)}BPM · ${detected}`;
-    $("#mr-start").textContent = `${song.mr.start.toFixed(2)}초`;
+    const key = keyName(song.mr.tonic, song.mr.minor);
+    $("#mr-info").textContent = t("mr.info", { file: song.mr.file, bpm: Math.round(song.mr.detected_bpm), key });
+    $("#mr-start").textContent = t("mr.seconds", { s: song.mr.start.toFixed(2) });
     $("#mr-gain").value = song.mr.gain;
   }
   $("#engine").value = song.engine ?? "smooth";
@@ -153,8 +151,8 @@ function renderRoll() {
     blk.style.height = `${ROW_H - 2}px`;
     blk.textContent = n.lyric;
     if (n.sharp) blk.insertAdjacentHTML("beforeend", "<sup>♯</sup>");
-    const gapInfo = n.gap ? ` · 앞 쉼 ${n.gap}박` : "";
-    blk.title = n.rest ? "영상에 없는 소리 (쉼)" : `${degLabel(n.degree)}${n.sharp ? "♯" : ""} · ${n.beats}박${gapInfo}`;
+    const gap = n.gap ? t("block.gap", { gap: n.gap }) : "";
+    blk.title = n.rest ? t("block.rest") : t("block.info", { deg: `${degLabel(n.degree)}${n.sharp ? "♯" : ""}`, beats: n.beats, gap });
     inner.append(blk);
   });
 
@@ -243,7 +241,7 @@ async function playNote(i) {
 // ---------- 쉼 (고른 블록 앞의 빈 시간) ----------
 function changeGap(delta) {
   const song = curSong();
-  if (!song || selectedNote === null) return toast("먼저 블록을 하나 고르세요");
+  if (!song || selectedNote === null) return toast(t("block.pickFirst"));
   const n = song.notes[selectedNote];
   const next = Math.max(0, Math.round(((n.gap ?? 0) + delta) * 2) / 2);
   if (next === (n.gap ?? 0)) return;
@@ -313,7 +311,7 @@ for (const [id, delta] of [["#all-up", 1], ["#all-down", -1]]) {
 async function followOriginal(prev) {
   state.busy = true;
   refreshSteps();
-  const unlisten = await listen("follow-progress", ({ payload }) => setStatus(`로봇 오토튠 — ${payload}… (처음 한 번은 1~2분)`));
+  const unlisten = await listen("follow-progress", ({ payload }) => setStatus(t("follow.progress", { stage: t(`follow.stage.${payload}`) })));
   try {
     state.project.song = await invoke("follow_original");
     undoStack.push(prev);
@@ -323,7 +321,7 @@ async function followOriginal(prev) {
     renderRoll();
     scrollRollToNotes();
     const found = curSong().mr?.syllables?.length ?? 0;
-    toast(found ? `원곡 음절 ${found}개를 찾아 가사에 맞춰 배치했습니다` : "원곡 가사를 알아듣지 못해 멜로디 음표 순서대로 배치했습니다");
+    toast(found ? t("follow.found", { n: found }) : t("follow.notFound"));
   } catch (e) {
     toast(String(e), true);
   } finally {
@@ -346,8 +344,8 @@ for (const btn of document.querySelectorAll("[data-preset]")) {
       state.project.song = await invoke("apply_preset", { preset: btn.dataset.preset });
       if (btn.dataset.preset === "robot") {
         const s = curSong();
-        if (s.midi) toast("MIDI 멜로디대로 배치했습니다");
-        else if (s.mr?.melody?.length) toast("원곡 멜로디대로 배치했습니다");
+        if (s.midi) toast(t("robot.midi"));
+        else if (s.mr?.melody?.length) toast(t("robot.original"));
       }
       undoStack.push(prev);
       state.project.conversion = null;
@@ -360,10 +358,13 @@ for (const btn of document.querySelectorAll("[data-preset]")) {
     }
   });
 }
+const syncAdvToggle = () => ($("#adv-toggle").textContent = t($("#adv").hidden ? "song.adv" : "song.advOpen"));
 $("#adv-toggle").addEventListener("click", () => {
   $("#adv").hidden = !$("#adv").hidden;
-  $("#adv-toggle").textContent = $("#adv").hidden ? "고급 ▸" : "고급 ▾";
+  syncAdvToggle();
 });
+syncAdvToggle();
+onLanguageChange(syncAdvToggle);
 for (const id of ["flat", "vibrato"]) {
   $(`#${id}`).addEventListener("change", () => {
     const prev = snapshot();
@@ -378,7 +379,7 @@ $("#engine").addEventListener("change", () => {
 });
 $("#sharp").addEventListener("click", () => {
   const song = curSong();
-  if (selectedNote === null || song.notes[selectedNote].rest) return toast("먼저 블록을 하나 고르세요");
+  if (selectedNote === null || song.notes[selectedNote].rest) return toast(t("block.pickFirst"));
   const prev = snapshot();
   const n = song.notes[selectedNote];
   n.sharp = !n.sharp;
@@ -414,11 +415,11 @@ function updateRollCursor() {
 const AUDIO_EXTS = ["mp3", "wav", "m4a", "aac", "flac", "ogg", "opus", "wma"];
 
 $("#btn-mr").addEventListener("click", async () => {
-  if (!curSong()) return toast("먼저 생성해 주세요", true);
-  const path = await dialog.open({ title: "반주(MR) 불러오기", filters: [{ name: "음원", extensions: AUDIO_EXTS }] });
+  if (!curSong()) return toast(t("song.needGenerate"), true);
+  const path = await dialog.open({ title: t("dlg.importMr"), filters: [{ name: t("dlg.audioFilter"), extensions: AUDIO_EXTS }] });
   if (!path) return;
   const prev = snapshot();
-  setStatus("반주 분석 중 (빠르기·키·첫 박)…");
+  setStatus(t("mr.analyzing"));
   try {
     state.project.song = await invoke("import_mr", { path });
     undoStack.push(prev);
@@ -429,9 +430,9 @@ $("#btn-mr").addEventListener("click", async () => {
     const s = curSong();
     scrollRollToNotes();
     const mel = s.mr?.melody?.length
-      ? ` 원곡 멜로디 ${s.mr.melody.length}음을 땄습니다 — '로봇 오토튠'을 누르면 그 멜로디대로 바뀝니다.`
-      : " (원곡 목소리를 찾지 못해 멜로디는 따지 못했습니다)";
-    toast(`반주를 맞췄습니다 — 빠르기 ${s.bpm}, ${KEY_NAMES[s.key]}.${mel}`);
+      ? t("mr.melodyFound", { n: s.mr.melody.length })
+      : t("mr.melodyNotFound");
+    toast(t("mr.done", { bpm: s.bpm, key: keyName(s.key), mel }));
   } catch (e) {
     toast(String(e), true);
   } finally {
@@ -440,8 +441,8 @@ $("#btn-mr").addEventListener("click", async () => {
 });
 
 $("#btn-midi").addEventListener("click", async () => {
-  if (!curSong()) return toast("먼저 생성해 주세요", true);
-  const path = await dialog.open({ title: "멜로디(MIDI) 불러오기", filters: [{ name: "MIDI", extensions: ["mid", "midi"] }] });
+  if (!curSong()) return toast(t("song.needGenerate"), true);
+  const path = await dialog.open({ title: t("dlg.importMidi"), filters: [{ name: "MIDI", extensions: ["mid", "midi"] }] });
   if (!path) return;
   const prev = snapshot();
   try {
@@ -454,9 +455,9 @@ $("#btn-midi").addEventListener("click", async () => {
     renderRoll();
     scrollRollToNotes();
     const extra = r.midi_notes > r.syllables
-      ? ` 가사보다 멜로디가 ${r.midi_notes - r.syllables}음 더 깁니다 (노래는 가사가 끝나는 곳에서 끝).`
-      : r.midi_notes < r.syllables ? ` 뒤쪽 음절 ${r.syllables - r.midi_notes}개는 지금 음 그대로입니다.` : "";
-    toast(`MIDI 멜로디 ${r.midi_notes}음을 불러왔습니다 — '로봇 오토튠'을 누르면 가사에 배정됩니다.${extra}`);
+      ? t("midi.longer", { n: r.midi_notes - r.syllables })
+      : r.midi_notes < r.syllables ? t("midi.shorter", { n: r.syllables - r.midi_notes }) : "";
+    toast(t("midi.done", { n: r.midi_notes, extra }));
   } catch (e) {
     toast(String(e), true);
   }

@@ -33,6 +33,9 @@ function setStatus(text) {
   $("#status").textContent = text || "";
 }
 
+// 취소로 끝난 작업 (백엔드도 같은 언어로 "취소됨"을 돌려줌)
+const isCancelled = (e) => String(e).includes(t("err.cancelled"));
+
 function fmtTime(sec) {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60);
@@ -41,7 +44,7 @@ function fmtTime(sec) {
 
 // ---------- 프로젝트 ----------
 async function chooseProject() {
-  const dir = await dialog.open({ directory: true, title: "프로젝트 폴더 선택" });
+  const dir = await dialog.open({ directory: true, title: t("dlg.pickProject") });
   if (!dir) return;
   try {
     setProject(await invoke("open_project", { path: dir }));
@@ -99,7 +102,7 @@ function renderAssets() {
     const rm = document.createElement("button");
     rm.className = "remove";
     rm.textContent = "✕";
-    rm.title = "목록에서 빼기 (파일은 Assets 폴더에 남습니다)";
+    rm.title = t("assets.remove");
     rm.addEventListener("click", (ev) => {
       ev.stopPropagation();
       removeAsset(a.id);
@@ -110,8 +113,8 @@ function renderAssets() {
     badge.className = `badge ${needsAlign ? "" : a.analysis}`;
     badge.textContent = needsAlign ? "½" : a.analysis === "done" ? "✓" : a.analysis === "error" ? "!" : "";
     badge.title = needsAlign
-      ? "일부만 분석됨 — 분석을 누르면 남은 단계(발음 정렬·조각 미리 듣기)를 이어서 합니다"
-      : a.analysis === "done" ? "분석 완료" : a.analysis === "error" ? "분석 실패 — 분석을 다시 누르면 재시도" : "분석 전";
+      ? t("assets.partial")
+      : t(a.analysis === "done" ? "assets.done" : a.analysis === "error" ? "assets.error" : "assets.idle");
 
     li.append(badge, name, dur, rm);
     li.addEventListener("click", () => selectAsset(a.id));
@@ -179,33 +182,31 @@ function renderNotes() {
   $("#song").hidden = true;
   $("#notes-empty").hidden = true;
   if (state.view === "song") {
-    $("#notes-title").textContent = "음계 — 블록을 위아래로 옮기면 음이 바뀝니다";
+    $("#notes-title").textContent = t("song.title");
     if (state.project?.song) renderSongEditor();
-    else showNotesEmpty("생성을 마치면 가사 음절마다 블록이 생깁니다.");
+    else showNotesEmpty(t("song.empty"));
   } else if (state.view === "result") {
     const gen = state.project?.generation;
-    $("#notes-title").textContent = "생성 결과";
+    $("#notes-title").textContent = t("result.title");
     if (gen) renderClips(gen);
-    else showNotesEmpty("가사를 쓰고 생성을 누르면 여기에 가사 조각이 나타납니다.");
+    else showNotesEmpty(t("result.empty"));
   } else {
     renderTranscript();
   }
 }
 
-const KIND_LABEL = { phrase: "구 통째로", word: "단어 통째로", syllable: "음절 조각", missing: "영상에 없는 소리 (무음)" };
-
 function renderClips(gen) {
   const box = $("#clips");
   box.replaceChildren();
   box.hidden = false;
-  $("#notes-title").textContent = "생성 결과 — 누르면 재생 · 우클릭하면 다른 원본으로 바꾸기";
+  $("#notes-title").textContent = t("result.titleHint");
 
   const legend = document.createElement("div");
   legend.className = "legend";
   legend.innerHTML =
-    '<span><i style="background:#263044"></i>단어·구</span>' +
-    '<span><i style="background:#5c5032"></i>음절 조각</span>' +
-    '<span><i style="background:#3d2224;border:1px solid var(--error)"></i>없는 소리</span>';
+    `<span><i style="background:#263044"></i>${t("result.legend.word")}</span>` +
+    `<span><i style="background:#5c5032"></i>${t("result.legend.syllable")}</span>` +
+    `<span><i style="background:#3d2224;border:1px solid var(--error)"></i>${t("result.legend.missing")}</span>`;
   box.append(legend);
 
   let lineEl = null;
@@ -228,8 +229,8 @@ function renderClips(gen) {
       chip.append(alt);
     }
     chip.title = src
-      ? `${KIND_LABEL[clip.kind]} · 원본에서 "${src.said}" (${fmtTime(src.start)})`
-      : KIND_LABEL.missing;
+      ? t("result.source", { kind: t(`kind.${clip.kind}`), said: src.said, time: fmtTime(src.start) })
+      : t("kind.missing");
     chip.addEventListener("click", () => playClip(i, chip));
     chip.addEventListener("contextmenu", (ev) => {
       ev.preventDefault();
@@ -251,7 +252,7 @@ async function swapClip(index) {
   if (state.busy || clip.candidates.length < 2) return;
   state.busy = true;
   refreshSteps();
-  setStatus("다른 원본으로 바꾸는 중…");
+  setStatus(t("result.swapping"));
   try {
     setProject(await invoke("swap_clip", { index }));
     state.view = "result";
@@ -297,9 +298,9 @@ function playRange(start, end, el) {
 async function renderTranscript() {
   const box = $("#transcript");
   const asset = state.project?.assets.find((a) => a.id === state.selectedId);
-  $("#notes-title").textContent = asset ? `인식 결과 — ${asset.file_name}` : "인식 결과";
-  if (!asset) return showNotesEmpty("왼쪽에서 영상을 고르면 인식된 단어가 나타납니다. 단어를 누르면 그 부분만 재생됩니다.");
-  if (asset.analysis !== "done") return showNotesEmpty("분석을 마치면 인식된 단어가 나타납니다.");
+  $("#notes-title").textContent = asset ? t("tr.titleFile", { file: asset.file_name }) : t("tr.title");
+  if (!asset) return showNotesEmpty(t("tr.pick"));
+  if (asset.analysis !== "done") return showNotesEmpty(t("tr.needAnalyze"));
 
   let data;
   try {
@@ -312,7 +313,7 @@ async function renderTranscript() {
   box.hidden = false;
   box.replaceChildren();
   if (data.segments.length === 0) {
-    box.textContent = "인식된 말소리가 없습니다.";
+    box.textContent = t("tr.none");
     return;
   }
   for (const seg of data.segments) {
@@ -321,7 +322,7 @@ async function renderTranscript() {
     const time = document.createElement("span");
     time.className = "time";
     time.textContent = fmtTime(seg.start);
-    time.title = "이 문장 재생";
+    time.title = t("tr.playLine");
     time.addEventListener("click", () => playRange(seg.start, seg.end));
     const words = document.createElement("div");
     words.className = "words";
@@ -330,7 +331,7 @@ async function renderTranscript() {
       chip.className = "word";
       if (w.prob < 0.5) chip.classList.add("low"); // 인식 신뢰도 낮음
       chip.textContent = w.text;
-      chip.title = `${w.start.toFixed(2)}s – ${w.end.toFixed(2)}s · 신뢰도 ${Math.round(w.prob * 100)}%`;
+      chip.title = t("tr.wordInfo", { start: w.start.toFixed(2), end: w.end.toFixed(2), p: Math.round(w.prob * 100) });
       chip.addEventListener("click", () => playRange(w.start, w.end, chip));
       words.append(chip);
     }
@@ -343,8 +344,8 @@ async function importVideos() {
   if (state.busy) return;
   const picked = await dialog.open({
     multiple: true,
-    title: "영상 불러오기",
-    filters: [{ name: "영상", extensions: VIDEO_EXTS }],
+    title: t("dlg.importVideo"),
+    filters: [{ name: t("dlg.videoFilter"), extensions: VIDEO_EXTS }],
   });
   if (!picked || picked.length === 0) return;
   const paths = Array.isArray(picked) ? picked : [picked];
@@ -353,7 +354,7 @@ async function importVideos() {
   refreshSteps();
   const unlisten = await listen("import-progress", ({ payload }) => {
     setStatus(payload.done < payload.total
-      ? `불러오는 중 ${payload.done + 1}/${payload.total} — ${payload.file}`
+      ? t("import.progress", { i: payload.done + 1, n: payload.total, file: payload.file })
       : "");
   });
   try {
@@ -361,7 +362,7 @@ async function importVideos() {
     // 새 영상이 들어오면 setProject가 분석 단계를 미완료로 되돌림
     setProject(result.project);
     if (result.errors.length) toast(result.errors.join("\n"), true);
-    else toast(`${paths.length}개 영상을 불러왔습니다`);
+    else toast(t("import.done", { n: paths.length }));
   } catch (e) {
     toast(String(e), true);
   } finally {
@@ -440,31 +441,29 @@ function confirmDisclaimer() {
   });
 }
 
-const STEP_LABEL = { analyze: "분석", generate: "생성", convert: "변환", export: "내보내기" };
-
 async function runAnalyze() {
   state.busy = true;
   state.steps.analyze = "working";
   resetStepsFrom("generate");
   $("#btn-cancel").hidden = false;
   $("#btn-cancel").disabled = false;
-  setStatus("음성 인식 모델 불러오는 중…");
+  setStatus(t("analyze.loading"));
   const unlisten = await listen("analyze-progress", ({ payload: p }) => {
-    const stage = { stt: "1/3 음성 인식", align: "2/3 발음 정렬", check: "3/3 조각 미리 듣기" }[p.stage] ?? p.stage;
-    setStatus(`${stage} 중 ${p.index + 1}/${p.total} — ${p.file} ${p.percent}%`);
+    const stage = ["stt", "align", "check"].includes(p.stage) ? t(`analyze.stage.${p.stage}`) : p.stage;
+    setStatus(t("analyze.progress", { stage, i: p.index + 1, n: p.total, file: p.file, p: p.percent }));
   });
   try {
     const r = await invoke("analyze");
     setProject(r.project);
     if (r.cancelled) {
       state.steps.analyze = "locked";
-      toast("분석을 취소했습니다. 다시 누르면 남은 영상부터 이어서 분석합니다.");
+      toast(t("analyze.cancelled"));
     } else if (r.errors.length) {
       state.steps.analyze = "error";
       toast(r.errors.join("\n"), true);
     } else {
       state.steps.analyze = "done";
-      toast("분석 완료");
+      toast(t("analyze.done"));
     }
   } catch (e) {
     state.steps.analyze = "error";
@@ -488,11 +487,11 @@ async function runGenerate() {
   resetStepsFrom("convert");
   $("#btn-cancel").hidden = false;
   $("#btn-cancel").disabled = false;
-  setStatus("가사 조각 찾는 중…");
+  setStatus(t("generate.finding"));
   const unlisten = await listen("generate-progress", ({ payload: p }) => {
     setStatus(p.stage === "verify"
-      ? `생성 중 — 잘 들리는 조각 고르는 중 ${p.done}/${p.total}`
-      : `생성 중 — 영상 조각 ${p.done}/${p.total}`);
+      ? t("generate.verify", p)
+      : t("generate.render", p));
   });
   try {
     setProject(await invoke("generate", { lyrics: $("#lyrics").value }));
@@ -502,10 +501,10 @@ async function runGenerate() {
     await loadPreview();
     const missing = state.project.generation.clips.filter((c) => c.kind === "missing").length;
     toast(missing
-      ? `생성 완료 — 영상에 없는 소리 ${missing}개는 빨간색(무음)으로 표시됩니다`
-      : "생성 완료 — 들어 보고, '음계' 탭에서 블록을 옮겨 노래로 만드세요");
+      ? t("generate.doneMissing", { n: missing })
+      : t("generate.done"));
   } catch (e) {
-    state.steps.generate = String(e).includes("취소") ? "locked" : "error";
+    state.steps.generate = isCancelled(e) ? "locked" : "error";
     toast(String(e), true);
   } finally {
     unlisten();
@@ -518,7 +517,7 @@ async function runGenerate() {
 
 $("#btn-cancel").addEventListener("click", () => {
   $("#btn-cancel").disabled = true;
-  setStatus("취소하는 중…");
+  setStatus(t("cancel.working"));
   invoke("cancel_job");
 });
 
@@ -531,8 +530,8 @@ async function runConvert() {
   $("#btn-cancel").disabled = false;
   const unlisten = await listen("convert-progress", ({ payload: p }) => {
     setStatus(p.stage === "sing"
-      ? `변환 중 — 노래로 바꾸는 중 ${p.done}/${p.total}`
-      : `변환 중 — 영상 만드는 중 ${p.done}/${p.total}`);
+      ? t("convert.sing", p)
+      : t("convert.video", p));
   });
   try {
     setProject(await invoke("convert_song"));
@@ -540,9 +539,9 @@ async function runConvert() {
     state.view = "song";
     renderNotes();
     await loadConverted();
-    toast("변환 완료 — 재생 버튼으로 들어보세요");
+    toast(t("convert.done"));
   } catch (e) {
-    state.steps.convert = String(e).includes("취소") ? "locked" : "error";
+    state.steps.convert = isCancelled(e) ? "locked" : "error";
     toast(String(e), true);
   } finally {
     unlisten();
@@ -555,10 +554,10 @@ async function runConvert() {
 
 // ---------- 내보내기 ----------
 const EXPORT_FILES = {
-  mp4: { ext: "mp4", name: "영상", label: "영상 (MP4)" },
-  wav_mix: { ext: "wav", name: "노래", label: "소리 (WAV)" },
-  wav_vocal: { ext: "wav", name: "목소리", label: "목소리 (WAV)" },
-  midi: { ext: "mid", name: "멜로디", label: "MIDI" },
+  mp4: "mp4",
+  wav_mix: "wav",
+  wav_vocal: "wav",
+  midi: "mid",
 };
 
 function chooseExportKind() {
@@ -579,22 +578,22 @@ function chooseExportKind() {
 async function runExport() {
   const kind = await chooseExportKind();
   if (!kind) return;
-  const f = EXPORT_FILES[kind];
+  const ext = EXPORT_FILES[kind];
   const dest = await dialog.save({
-    title: "내보내기",
-    defaultPath: `${state.project.name}_${f.name}.${f.ext}`,
-    filters: [{ name: f.label, extensions: [f.ext] }],
+    title: t("export.title"),
+    defaultPath: `${state.project.name}_${t(`export.name.${kind}`)}.${ext}`,
+    filters: [{ name: t(`export.label.${kind}`), extensions: [ext] }],
   });
   if (!dest) return;
   state.busy = true;
   state.steps.export = "working";
   refreshSteps();
-  const unlisten = await listen("export-progress", ({ payload: p }) => setStatus(`내보내는 중 — 고화질 영상 ${p.done}/${p.total}`));
-  setStatus("내보내는 중…");
+  const unlisten = await listen("export-progress", ({ payload: p }) => setStatus(t("export.progress", p)));
+  setStatus(t("export.working"));
   try {
     await invoke("export", { kind, dest });
     state.steps.export = "done";
-    toast(`저장했습니다: ${dest}`);
+    toast(t("export.saved", { path: dest }));
   } catch (e) {
     state.steps.export = "error";
     toast(String(e), true);
@@ -612,7 +611,7 @@ async function runStep(step) {
   if (step === "generate") return runGenerate();
   if (step === "convert") return runConvert();
 
-  toast(`${STEP_LABEL[step]}: 알 수 없는 단계`, true);
+  toast(t("step.unknown", { step }), true);
 }
 
 for (const btn of document.querySelectorAll(".step")) {
@@ -694,3 +693,18 @@ for (const handle of document.querySelectorAll(".splitter")) {
 $("#btn-open").addEventListener("click", chooseProject);
 $("#btn-switch").addEventListener("click", chooseProject);
 $("#btn-import").addEventListener("click", importVideos);
+
+// ---------- 화면 언어 ----------
+for (const sel of document.querySelectorAll(".lang-select")) {
+  for (const l of LANGS) sel.append(new Option(l.label, l.code));
+  sel.value = LANG;
+  sel.addEventListener("change", () => setLanguage(sel.value));
+}
+onLanguageChange(() => {
+  for (const sel of document.querySelectorAll(".lang-select")) sel.value = LANG;
+  if (!state.project) return;
+  renderAssets();
+  renderNotes();
+});
+applyI18n();
+invoke("set_language", { lang: LANG }).catch(() => {});

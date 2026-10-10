@@ -28,5 +28,5 @@ pub fn find(name: &str) -> Result<PathBuf, String> {
         .into_iter()
         .map(|d| d.join(name))
         .find(|p| p.is_file())
-        .ok_or_else(|| format!("모델 파일({name})을 찾을 수 없습니다. 프로그램을 다시 설치해 주세요."))
+        .ok_or_else(|| tr!("model_missing", name))
 }

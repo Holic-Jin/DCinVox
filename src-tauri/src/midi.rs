@@ -22,10 +22,10 @@ pub struct Melody {
 }
 
 pub fn read_melody(bytes: &[u8]) -> Result<Melody, String> {
-    let smf = Smf::parse(bytes).map_err(|e| format!("MIDI 파일을 읽을 수 없습니다: {e}"))?;
+    let smf = Smf::parse(bytes).map_err(|e| tr!("midi_unreadable", e))?;
     let ppq = match smf.header.timing {
         Timing::Metrical(t) => t.as_int() as f32,
-        Timing::Timecode(..) => return Err("지원하지 않는 MIDI 시간 형식입니다 (SMPTE)".into()),
+        Timing::Timecode(..) => return Err(tr!("midi_smpte").into()),
     };
     let mut bpm = None;
     let mut key = None;
@@ -69,7 +69,7 @@ pub fn read_melody(bytes: &[u8]) -> Result<Melody, String> {
     // 음표가 가장 많은 트랙을 멜로디로
     let mut notes = tracks.into_iter().max_by_key(|t| t.len()).unwrap_or_default();
     if notes.is_empty() {
-        return Err("MIDI 파일에 음표가 없습니다".into());
+        return Err(tr!("midi_no_notes").into());
     }
     notes.sort_by_key(|n| (n.0, std::cmp::Reverse(n.2)));
     // 화음이면 같은 시작의 가장 높은 음만, 겹치면 앞 음을 다음 음 시작에서 끊음 (한 목소리)

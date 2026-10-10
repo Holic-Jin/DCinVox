@@ -157,7 +157,7 @@ pub fn render_video(
                 scale,
             ),
             Some((asset_id, start, end)) => {
-                let file = files.get(asset_id).ok_or("원본 영상을 찾을 수 없습니다")?;
+                let file = files.get(asset_id).ok_or(tr!("source_missing"))?;
                 // 원본 길이와 출력 길이가 다르면 늘이거나 줄임 (노래로 늘인 음절)
                 let stretch = ((seg.t1 - seg.t0) / (end - start).max(0.001)).clamp(0.05, 50.0);
                 let vf = if (stretch - 1.0).abs() < 0.01 { scale } else { format!("setpts={stretch:.4}*PTS,{scale}") };
@@ -312,7 +312,7 @@ fn run_parallel(jobs: Vec<(PathBuf, Vec<String>)>, cancel: &AtomicBool, mut on_d
         }
     });
     if cancel.load(Ordering::Relaxed) {
-        return Err(crate::stt::CANCELLED.into());
+        return Err(tr!("cancelled").into());
     }
     let err = error.lock().unwrap().take();
     match err {
@@ -323,7 +323,7 @@ fn run_parallel(jobs: Vec<(PathBuf, Vec<String>)>, cancel: &AtomicBool, mut on_d
 
 pub fn wav_for<'a>(wavs: &'a mut HashMap<String, Wav>, root: &Path, id: &str) -> Result<&'a mut Wav, String> {
     if !wavs.contains_key(id) {
-        let w = hound::WavReader::open(project::cache_wav(root, id)).map_err(|e| format!("오디오 캐시 열기 실패: {e}"))?;
+        let w = hound::WavReader::open(project::cache_wav(root, id)).map_err(|e| tr!("audio_cache_failed", e))?;
         wavs.insert(id.to_string(), w);
     }
     Ok(wavs.get_mut(id).unwrap())

@@ -49,14 +49,14 @@ pub fn probe(input: &Path) -> Result<ProbeInfo, String> {
         .arg("-i")
         .arg(input)
         .output()
-        .map_err(|e| format!("ffmpeg 실행 실패: {e}"))?;
+        .map_err(|e| tr!("ffmpeg_run_failed", e))?;
     let text = String::from_utf8_lossy(&out.stderr);
     let duration = text
         .lines()
         .find_map(|l| l.trim().strip_prefix("Duration: "))
         .and_then(|rest| rest.split(',').next())
         .and_then(parse_timestamp)
-        .ok_or_else(|| format!("영상 길이를 읽을 수 없습니다: {}", input.display()))?;
+        .ok_or_else(|| tr!("video_length", input.display()))?;
     Ok(ProbeInfo {
         duration,
         has_audio: text.contains("Audio: "),
@@ -86,24 +86,24 @@ pub fn extract_wav_ch(input: &Path, output: &Path, sample_rate: u32, channels: u
         .args(["-vn", "-ac", &channels.to_string(), "-ar", &sample_rate.to_string(), "-c:a", "pcm_s16le"])
         .arg(output)
         .output()
-        .map_err(|e| format!("ffmpeg 실행 실패: {e}"))?;
+        .map_err(|e| tr!("ffmpeg_run_failed", e))?;
     if !out.status.success() {
         let err = String::from_utf8_lossy(&out.stderr);
         let tail: Vec<&str> = err.lines().rev().take(3).collect();
-        return Err(format!("오디오 추출 실패: {}", tail.into_iter().rev().collect::<Vec<_>>().join(" / ")));
+        return Err(tr!("audio_extract_failed", tail.into_iter().rev().collect::<Vec<_>>().join(" / ")));
     }
     Ok(())
 }
 
 /// ffmpeg 실행 후 실패 시 stderr 마지막 줄들로 오류 메시지
 pub fn run(args: &[String]) -> Result<(), String> {
-    let out = ffmpeg().args(args).output().map_err(|e| format!("ffmpeg 실행 실패: {e}"))?;
+    let out = ffmpeg().args(args).output().map_err(|e| tr!("ffmpeg_run_failed", e))?;
     if out.status.success() {
         return Ok(());
     }
     let err = String::from_utf8_lossy(&out.stderr);
     let tail: Vec<&str> = err.lines().rev().take(3).collect();
-    Err(format!("ffmpeg 오류: {}", tail.into_iter().rev().collect::<Vec<_>>().join(" / ")))
+    Err(tr!("ffmpeg_error", tail.into_iter().rev().collect::<Vec<_>>().join(" / ")))
 }
 
 /// H.264 인코더 선택. GPL인 libx264는 배포판에 넣지 않으므로 OS 하드웨어 인코더 → OpenH264 순.

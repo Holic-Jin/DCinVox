@@ -96,7 +96,7 @@ pub fn open_or_create(root: &Path) -> Result<Project, String> {
     let file = root.join(PROJECT_FILE);
     if file.is_file() {
         let text = fs::read_to_string(&file).map_err(io_err)?;
-        serde_json::from_str(&text).map_err(|e| format!("project.json 읽기 실패: {e}"))
+        serde_json::from_str(&text).map_err(|e| tr!("project_json_failed", e))
     } else {
         let project = Project::default();
         save(root, &project)?;
@@ -139,7 +139,7 @@ pub fn cache_wav(root: &Path, asset_id: &str) -> PathBuf {
 pub fn import_video(root: &Path, project: &mut Project, source: &Path) -> Result<(), String> {
     let info = media::probe(source)?;
     if !info.has_audio {
-        return Err(format!("소리가 없는 영상입니다: {}", display_name(source)));
+        return Err(tr!("no_audio", display_name(source)));
     }
 
     let file_name = unique_file_name(&root.join(ASSETS_DIR), source)?;
@@ -174,7 +174,7 @@ pub fn remove_asset(root: &Path, project: &mut Project, asset_id: &str) -> Resul
         .assets
         .iter()
         .position(|a| a.id == asset_id)
-        .ok_or("해당 영상을 찾을 수 없습니다")?;
+        .ok_or(tr!("asset_not_found"))?;
     let asset = project.assets.remove(pos);
     let _ = fs::remove_file(cache_wav(root, &asset.id));
     // Assets/ 의 영상 파일 자체는 사용자 소유물이므로 지우지 않는다.
@@ -198,7 +198,7 @@ fn display_name(p: &Path) -> String {
 pub fn unique_file_name(dir: &Path, source: &Path) -> Result<String, String> {
     let name = display_name(source);
     if name.is_empty() {
-        return Err("잘못된 파일 경로입니다".into());
+        return Err(tr!("bad_path").into());
     }
     let candidate = dir.join(&name);
     if !candidate.exists() || source.canonicalize().ok() == candidate.canonicalize().ok() {
@@ -209,11 +209,11 @@ pub fn unique_file_name(dir: &Path, source: &Path) -> Result<String, String> {
     (2..10_000)
         .map(|n| format!("{stem} ({n}){ext}"))
         .find(|n| !dir.join(n).exists())
-        .ok_or_else(|| "파일 이름을 정할 수 없습니다".into())
+        .ok_or_else(|| tr!("cannot_name_file").into())
 }
 
 fn io_err(e: std::io::Error) -> String {
-    format!("파일 오류: {e}")
+    tr!("file_error", e)
 }
 
 #[cfg(test)]

@@ -336,7 +336,7 @@ pub fn normalize(s: &str) -> String {
 }
 
 fn db_err(e: rusqlite::Error) -> String {
-    format!("색인 DB 오류: {e}")
+    tr!("db_error", e)
 }
 
 #[cfg(test)]

@@ -1,6 +1,8 @@
 // 릴리스 빌드에서 Windows 콘솔 창이 뜨지 않도록
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+#[macro_use]
+mod i18n;
 mod align;
 mod analyze;
 mod bench;
@@ -94,7 +96,7 @@ async fn import_videos(
         .lock()
         .unwrap()
         .clone()
-        .ok_or("먼저 프로젝트를 열어 주세요")?;
+        .ok_or(tr!("no_project"))?;
 
     // ffmpeg 처리는 오래 걸리므로 UI 스레드를 막지 않게 블로킹 스레드에서 실행
     let (root, proj, errors) = tauri::async_runtime::spawn_blocking(move || {
@@ -123,7 +125,7 @@ async fn import_videos(
 #[tauri::command]
 fn remove_asset(asset_id: String, state: State<AppState>) -> Result<ProjectView, String> {
     let mut guard = state.current.lock().unwrap();
-    let (root, proj) = guard.as_mut().ok_or("먼저 프로젝트를 열어 주세요")?;
+    let (root, proj) = guard.as_mut().ok_or(tr!("no_project"))?;
     project::remove_asset(root, proj, &asset_id)?;
     index::remove_asset(&index::open(root)?, &asset_id)?;
     project::save(root, proj)?;
@@ -133,7 +135,7 @@ fn remove_asset(asset_id: String, state: State<AppState>) -> Result<ProjectView,
 /// 아직 분석되지 않은 영상을 모두 분석. 영상 하나가 끝날 때마다 저장(중간에 꺼져도 이어하기 가능).
 #[tauri::command]
 async fn analyze(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<AnalyzeResult, String> {
-    let (root, proj) = state.current.lock().unwrap().clone().ok_or("먼저 프로젝트를 열어 주세요")?;
+    let (root, proj) = state.current.lock().unwrap().clone().ok_or(tr!("no_project"))?;
     let pending: Vec<_> = proj
         .assets
         .iter()
@@ -225,7 +227,7 @@ async fn analyze(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<An
                         checkpoint(&id, &|a| { a.aligned = true; a.checked = false; }, &mut errors);
                         to_check.push((id, file));
                     }
-                    Err(e) => errors.push(format!("{file} (발음 정렬): {e}")),
+                    Err(e) => errors.push(tr!("align_step_failed", file, e)),
                 }
             }
             let total = to_check.len();
@@ -236,7 +238,7 @@ async fn analyze(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<An
                 }
                 match result {
                     Ok(_) => checkpoint(&id, &|a| a.checked = true, &mut errors),
-                    Err(e) => errors.push(format!("{file} (조각 미리 듣기): {e}")),
+                    Err(e) => errors.push(tr!("check_step_failed", file, e)),
                 }
             }
         }
@@ -246,8 +248,13 @@ async fn analyze(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<An
     .map_err(|e| e.to_string())?;
 
     let guard = state.current.lock().unwrap();
-    let (root, proj) = guard.as_ref().ok_or("프로젝트가 닫혔습니다")?;
+    let (root, proj) = guard.as_ref().ok_or(tr!("project_closed"))?;
     Ok(AnalyzeResult { project: project::view(root, proj), errors, cancelled })
+}
+
+#[tauri::command]
+fn set_language(lang: String) {
+    i18n::set(&lang);
 }
 
 #[tauri::command]
@@ -258,14 +265,14 @@ fn cancel_job(state: State<AppState>) {
 #[tauri::command]
 fn get_transcript(asset_id: String, state: State<AppState>) -> Result<index::TranscriptView, String> {
     let guard = state.current.lock().unwrap();
-    let (root, _) = guard.as_ref().ok_or("먼저 프로젝트를 열어 주세요")?;
+    let (root, _) = guard.as_ref().ok_or(tr!("no_project"))?;
     index::transcript(&index::open(root)?, &asset_id)
 }
 
 /// 가사 → 클립 매칭 → 미리보기 렌더
 #[tauri::command]
 async fn generate(lyrics: String, app: tauri::AppHandle, state: State<'_, AppState>) -> Result<ProjectView, String> {
-    let (root, proj) = state.current.lock().unwrap().clone().ok_or("먼저 프로젝트를 열어 주세요")?;
+    let (root, proj) = state.current.lock().unwrap().clone().ok_or(tr!("no_project"))?;
     let prev_song = proj.song.clone();
     let cancel = state.cancel.clone();
     cancel.store(false, Ordering::Relaxed);
@@ -274,11 +281,11 @@ async fn generate(lyrics: String, app: tauri::AppHandle, state: State<'_, AppSta
     let (generation, song) = tauri::async_runtime::spawn_blocking(move || -> Result<(project::Generation, song::Song), String> {
         let words = index::load_words(&index::open(&r)?)?;
         if words.is_empty() {
-            return Err("분석된 단어가 없습니다. 먼저 분석을 해 주세요.".into());
+            return Err(tr!("need_analyze").into());
         }
         let mut clips = compose::compose(&l, &words);
         if clips.is_empty() {
-            return Err("가사를 입력해 주세요".into());
+            return Err(tr!("need_lyrics").into());
         }
         // 잘라 놓고 들었을 때 가장 또렷한 후보 고르기 (정렬 모델은 이 블록 안에서만 메모리에 존재)
         {
@@ -300,7 +307,7 @@ async fn generate(lyrics: String, app: tauri::AppHandle, state: State<'_, AppSta
     .map_err(|e| e.to_string())??;
 
     let mut guard = state.current.lock().unwrap();
-    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or("프로젝트가 바뀌었습니다")?;
+    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or(tr!("project_changed"))?;
     proj.lyrics = lyrics;
     proj.generation = Some(generation);
     proj.song = Some(song);
@@ -312,11 +319,11 @@ async fn generate(lyrics: String, app: tauri::AppHandle, state: State<'_, AppSta
 /// 클립의 원본을 다음 후보로 바꾸고 다시 렌더
 #[tauri::command]
 async fn swap_clip(index: usize, state: State<'_, AppState>) -> Result<ProjectView, String> {
-    let (root, proj) = state.current.lock().unwrap().clone().ok_or("먼저 프로젝트를 열어 주세요")?;
-    let mut generation = proj.generation.ok_or("생성 결과가 없습니다")?;
-    let clip = generation.clips.get_mut(index).ok_or("잘못된 클립")?;
+    let (root, proj) = state.current.lock().unwrap().clone().ok_or(tr!("no_project"))?;
+    let mut generation = proj.generation.ok_or(tr!("no_generation"))?;
+    let clip = generation.clips.get_mut(index).ok_or(tr!("bad_clip"))?;
     if clip.candidates.len() < 2 {
-        return Err("바꿀 수 있는 다른 후보가 없습니다".into());
+        return Err(tr!("no_alternative").into());
     }
     clip.choice = (clip.choice + 1) % clip.candidates.len();
     let cancel = state.cancel.clone();
@@ -346,7 +353,7 @@ async fn swap_clip(index: usize, state: State<'_, AppState>) -> Result<ProjectVi
     .map_err(|e| e.to_string())??;
 
     let mut guard = state.current.lock().unwrap();
-    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or("프로젝트가 바뀌었습니다")?;
+    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or(tr!("project_changed"))?;
     proj.generation = Some(generation);
     if song.is_some() {
         proj.song = song;
@@ -360,7 +367,7 @@ async fn swap_clip(index: usize, state: State<'_, AppState>) -> Result<ProjectVi
 #[tauri::command]
 fn update_song(song: song::Song, state: State<AppState>) -> Result<(), String> {
     let mut guard = state.current.lock().unwrap();
-    let (root, proj) = guard.as_mut().ok_or("먼저 프로젝트를 열어 주세요")?;
+    let (root, proj) = guard.as_mut().ok_or(tr!("no_project"))?;
     proj.song = Some(song);
     proj.conversion = None;
     project::save(root, proj)
@@ -370,8 +377,8 @@ fn update_song(song: song::Song, state: State<AppState>) -> Result<(), String> {
 #[tauri::command]
 fn apply_preset(preset: song::Preset, state: State<AppState>) -> Result<song::Song, String> {
     let mut guard = state.current.lock().unwrap();
-    let (root, proj) = guard.as_mut().ok_or("먼저 프로젝트를 열어 주세요")?;
-    let s = proj.song.as_mut().ok_or("먼저 생성해 주세요")?;
+    let (root, proj) = guard.as_mut().ok_or(tr!("no_project"))?;
+    let s = proj.song.as_mut().ok_or(tr!("need_generate"))?;
     song::apply_preset(s, preset);
     let out = s.clone();
     proj.conversion = None;
@@ -382,8 +389,8 @@ fn apply_preset(preset: song::Preset, state: State<AppState>) -> Result<song::So
 /// 반주(MR) 불러오기: Assets/로 복사 → 분석(빠르기·첫 박·키) → 노래 설정에 반영
 #[tauri::command]
 async fn import_mr(path: String, state: State<'_, AppState>) -> Result<song::Song, String> {
-    let (root, proj) = state.current.lock().unwrap().clone().ok_or("먼저 프로젝트를 열어 주세요")?;
-    let mut s = proj.song.ok_or("먼저 생성해 주세요")?;
+    let (root, proj) = state.current.lock().unwrap().clone().ok_or(tr!("no_project"))?;
+    let mut s = proj.song.ok_or(tr!("need_generate"))?;
     let r = root.clone();
     let s = tauri::async_runtime::spawn_blocking(move || -> Result<song::Song, String> {
         let src = PathBuf::from(&path);
@@ -391,7 +398,7 @@ async fn import_mr(path: String, state: State<'_, AppState>) -> Result<song::Son
         let name = project::unique_file_name(&assets, &src)?;
         let dest = assets.join(&name);
         if src.canonicalize().ok() != dest.canonicalize().ok() {
-            std::fs::copy(&src, &dest).map_err(|e| format!("반주 복사 실패: {e}"))?;
+            std::fs::copy(&src, &dest).map_err(|e| tr!("mr_copy_failed", e))?;
         }
         let cache = r.join(project::CACHE_DIR);
         media::extract_wav_ch(&dest, &cache.join(convert::MR_CACHE), project::OUTPUT_SAMPLE_RATE, 2)?;
@@ -423,7 +430,7 @@ async fn import_mr(path: String, state: State<'_, AppState>) -> Result<song::Son
     .await
     .map_err(|e| e.to_string())??;
     let mut guard = state.current.lock().unwrap();
-    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or("프로젝트가 바뀌었습니다")?;
+    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or(tr!("project_changed"))?;
     proj.song = Some(s.clone());
     proj.conversion = None;
     project::save(root2, proj)?;
@@ -440,9 +447,9 @@ struct ConvertProgress {
 /// 음계대로 노래로 변환 + 영상 만들기 → cache/converted.mp4
 #[tauri::command]
 async fn convert_song(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<ProjectView, String> {
-    let (root, proj) = state.current.lock().unwrap().clone().ok_or("먼저 프로젝트를 열어 주세요")?;
-    let generation = proj.generation.ok_or("먼저 생성해 주세요")?;
-    let song = proj.song.ok_or("먼저 생성해 주세요")?;
+    let (root, proj) = state.current.lock().unwrap().clone().ok_or(tr!("no_project"))?;
+    let generation = proj.generation.ok_or(tr!("need_generate"))?;
+    let song = proj.song.ok_or(tr!("need_generate"))?;
     let cancel = state.cancel.clone();
     cancel.store(false, Ordering::Relaxed);
     let r = root.clone();
@@ -474,7 +481,7 @@ async fn convert_song(app: tauri::AppHandle, state: State<'_, AppState>) -> Resu
     .map_err(|e| e.to_string())??;
 
     let mut guard = state.current.lock().unwrap();
-    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or("프로젝트가 바뀌었습니다")?;
+    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or(tr!("project_changed"))?;
     proj.conversion = Some(spans);
     project::save(root2, proj)?;
     Ok(project::view(root2, proj))
@@ -492,11 +499,11 @@ struct MidiResult {
 /// MIDI 멜로디 불러오기 → 음절에 순서대로 배정
 #[tauri::command]
 fn import_midi(path: String, state: State<AppState>) -> Result<MidiResult, String> {
-    let bytes = std::fs::read(&path).map_err(|e| format!("MIDI 파일 읽기 실패: {e}"))?;
+    let bytes = std::fs::read(&path).map_err(|e| tr!("midi_read_failed", e))?;
     let melody = midi::read_melody(&bytes)?;
     let mut guard = state.current.lock().unwrap();
-    let (root, proj) = guard.as_mut().ok_or("먼저 프로젝트를 열어 주세요")?;
-    let s = proj.song.as_mut().ok_or("먼저 생성해 주세요")?;
+    let (root, proj) = guard.as_mut().ok_or(tr!("no_project"))?;
+    let s = proj.song.as_mut().ok_or(tr!("need_generate"))?;
     // 바로 바꾸지 않고 보관 → 로봇 오토튠을 누르면 적용
     let assigned = melody.notes.len().min(s.notes.len());
     let midi_notes = melody.notes.len();
@@ -510,7 +517,7 @@ fn import_midi(path: String, state: State<AppState>) -> Result<MidiResult, Strin
 /// 내보내기: kind = "mp4" | "wav_mix" | "wav_vocal" | "midi"
 #[tauri::command]
 async fn export(kind: String, dest: String, app: tauri::AppHandle, state: State<'_, AppState>) -> Result<(), String> {
-    let (root, proj) = state.current.lock().unwrap().clone().ok_or("먼저 프로젝트를 열어 주세요")?;
+    let (root, proj) = state.current.lock().unwrap().clone().ok_or(tr!("no_project"))?;
     let cancel = state.cancel.clone();
     cancel.store(false, Ordering::Relaxed);
     tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
@@ -518,11 +525,11 @@ async fn export(kind: String, dest: String, app: tauri::AppHandle, state: State<
         let dest = PathBuf::from(dest);
         let mix = cache.join(convert::MIX_WAV);
         let vocal = cache.join(convert::VOCAL_WAV);
-        let need_converted = || if proj.conversion.is_some() { Ok(()) } else { Err("먼저 변환해 주세요".to_string()) };
+        let need_converted = || if proj.conversion.is_some() { Ok(()) } else { Err(tr!("need_convert").to_string()) };
         match kind.as_str() {
             "midi" => {
-                let generation = proj.generation.as_ref().ok_or("먼저 생성해 주세요")?;
-                let s = proj.song.as_ref().ok_or("먼저 생성해 주세요")?;
+                let generation = proj.generation.as_ref().ok_or(tr!("need_generate"))?;
+                let s = proj.song.as_ref().ok_or(tr!("need_generate"))?;
                 std::fs::write(&dest, midi::write_midi(s, &generation.clips)?).map_err(|e| e.to_string())
             }
             "wav_vocal" => {
@@ -536,8 +543,8 @@ async fn export(kind: String, dest: String, app: tauri::AppHandle, state: State<
             "mp4" => {
                 need_converted()?;
                 // 변환을 다시 돌려 고화질 영상 구간으로 렌더 (소리는 변환 결과 그대로)
-                let generation = proj.generation.as_ref().ok_or("먼저 생성해 주세요")?;
-                let s = proj.song.as_ref().ok_or("먼저 생성해 주세요")?;
+                let generation = proj.generation.as_ref().ok_or(tr!("need_generate"))?;
+                let s = proj.song.as_ref().ok_or(tr!("need_generate"))?;
                 let out = convert::convert(&root, &generation.clips, s, |_, _| {})?;
                 let wav = if mix.is_file() { mix } else { vocal };
                 let total = hound::WavReader::open(&wav).map(|r| r.duration() as f64 / project::OUTPUT_SAMPLE_RATE as f64).map_err(|e| e.to_string())?;
@@ -546,7 +553,7 @@ async fn export(kind: String, dest: String, app: tauri::AppHandle, state: State<
                 }, cancel)?;
                 std::fs::copy(cache.join("export.mp4"), &dest).map(|_| ()).map_err(|e| e.to_string())
             }
-            other => Err(format!("알 수 없는 형식: {other}")),
+            other => Err(tr!("unknown_format", other)),
         }
     })
     .await
@@ -557,21 +564,21 @@ async fn export(kind: String, dest: String, app: tauri::AppHandle, state: State<
 /// 가사 내용은 상관없음 ("짝반짝작은별"도 "반짝반짝작은" 멜로디로). 원곡 음절은 반주마다 한 번만 찾고 다시 씀
 #[tauri::command]
 async fn follow_original(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<song::Song, String> {
-    let (root, proj) = state.current.lock().unwrap().clone().ok_or("먼저 프로젝트를 열어 주세요")?;
-    let mut s = proj.song.ok_or("먼저 생성해 주세요")?;
+    let (root, proj) = state.current.lock().unwrap().clone().ok_or(tr!("no_project"))?;
+    let mut s = proj.song.ok_or(tr!("need_generate"))?;
     let cancel = state.cancel.clone();
     cancel.store(false, Ordering::Relaxed);
     let r = root.clone();
     let s = tauri::async_runtime::spawn_blocking(move || -> Result<song::Song, String> {
-        let mr = s.mr.clone().ok_or("반주가 없습니다")?;
+        let mr = s.mr.clone().ok_or(tr!("no_mr"))?;
         if mr.syllables.is_empty() || mr.syllables_for != ORIGINAL_SYLLABLES_V {
             let say = |stage: &'static str| {
                 let _ = app.emit("follow-progress", stage);
             };
             let cache = r.join(project::CACHE_DIR);
-            say("원곡 멜로디 읽는 중");
+            say("reading");
             let stereo: Vec<f32> = hound::WavReader::open(cache.join("mr_analysis.wav"))
-                .map_err(|e| format!("반주를 다시 불러와 주세요 ({e})"))?
+                .map_err(|e| tr!("mr_reload", e))?
                 .samples::<i16>()
                 .map(|v| v.map(|x| x as f32 / 32768.0))
                 .collect::<Result<_, _>>()
@@ -585,7 +592,7 @@ async fn follow_original(app: tauri::AppHandle, state: State<'_, AppState>) -> R
                 m.detected_bpm = a.bpm;
                 m.start = a.first_beat;
             }
-            let contour = music::extract_contour(&left, &right, 22_050).ok_or("반주가 너무 짧습니다")?;
+            let contour = music::extract_contour(&left, &right, 22_050).ok_or(tr!("mr_too_short"))?;
             // 가운데(보컬) 강조 신호 → 16kHz
             let center = music::center_signal(&left, &right);
             let c22 = cache.join("mr_center22.wav");
@@ -598,12 +605,12 @@ async fn follow_original(app: tauri::AppHandle, state: State<'_, AppState>) -> R
             w.finalize().map_err(|e| e.to_string())?;
             media::extract_wav(&c22, &c16, stt::SAMPLE_RATE)?;
             let mono16 = stt::read_wav(&c16)?;
-            say("원곡 가사 알아듣는 중");
+            say("lyrics");
             // 모델은 이 안에서만 메모리에 (8GB 대응: 인식 → 해제 → 정렬)
             let transcript_syllables = {
                 let rec = stt::Recognizer::load(&models::find(models::WHISPER_MODEL)?)?;
                 let mut aligner = align::Aligner::load(&models::find(align::MODEL_FILE)?, &models::find(align::VOCAB_FILE)?)?;
-                say("원곡 음절 위치 찾는 중");
+                say("locating");
                 music::original_syllables(&mono16, &contour, &rec, &mut aligner, None, cancel)?
             };
             let m = s.mr.as_mut().unwrap();
@@ -639,7 +646,7 @@ async fn follow_original(app: tauri::AppHandle, state: State<'_, AppState>) -> R
     .await
     .map_err(|e| e.to_string())??;
     let mut guard = state.current.lock().unwrap();
-    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or("프로젝트가 바뀌었습니다")?;
+    let (root2, proj) = guard.as_mut().filter(|(r, _)| *r == root).ok_or(tr!("project_changed"))?;
     proj.song = Some(s.clone());
     proj.conversion = None;
     project::save(root2, proj)?;
@@ -653,8 +660,8 @@ const ORIGINAL_SYLLABLES_V: &str = "auto-v6";
 #[tauri::command]
 fn remove_mr(state: State<AppState>) -> Result<song::Song, String> {
     let mut guard = state.current.lock().unwrap();
-    let (root, proj) = guard.as_mut().ok_or("먼저 프로젝트를 열어 주세요")?;
-    let s = proj.song.as_mut().ok_or("먼저 생성해 주세요")?;
+    let (root, proj) = guard.as_mut().ok_or(tr!("no_project"))?;
+    let s = proj.song.as_mut().ok_or(tr!("need_generate"))?;
     s.mr = None;
     let out = s.clone();
     proj.conversion = None;
@@ -671,7 +678,7 @@ fn media_base(server: State<MediaServer>) -> String {
 #[tauri::command]
 fn save_lyrics(lyrics: String, state: State<AppState>) -> Result<(), String> {
     let mut guard = state.current.lock().unwrap();
-    let (root, proj) = guard.as_mut().ok_or("먼저 프로젝트를 열어 주세요")?;
+    let (root, proj) = guard.as_mut().ok_or(tr!("no_project"))?;
     proj.lyrics = lyrics;
     project::save(root, proj)
 }
@@ -681,7 +688,7 @@ fn self_check() -> bool {
     let mut ok = true;
     let ff = media::ffmpeg_path();
     let ff_ok = std::process::Command::new(&ff).arg("-version").output().map(|o| o.status.success()).unwrap_or(false);
-    println!("ffmpeg: {} {}", ff.display(), if ff_ok { "OK" } else { "실행 실패" });
+    println!("ffmpeg: {} {}", ff.display(), if ff_ok { "OK" } else { "FAILED" });
     ok &= ff_ok;
     for name in [models::WHISPER_MODEL, align::MODEL_FILE, align::VOCAB_FILE] {
         match models::find(name) {
@@ -704,7 +711,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .manage(AppState::default())
         .manage(MediaServer::start().expect("재생 서버 시작 실패"))
-        .invoke_handler(tauri::generate_handler![open_project, import_videos, remove_asset, save_lyrics, media_base, analyze, cancel_job, get_transcript, generate, swap_clip, update_song, apply_preset, convert_song, import_mr, remove_mr, import_midi, export, follow_original])
+        .invoke_handler(tauri::generate_handler![set_language, open_project, import_videos, remove_asset, save_lyrics, media_base, analyze, cancel_job, get_transcript, generate, swap_clip, update_song, apply_preset, convert_song, import_mr, remove_mr, import_midi, export, follow_original])
         .run(tauri::generate_context!())
         .expect("DCinVox 실행 실패");
 }

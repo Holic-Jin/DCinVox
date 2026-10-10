@@ -50,7 +50,7 @@ pub fn align_asset(
     let mut results = Vec::new();
     for (i, seg) in segments.iter().enumerate() {
         if cancel.load(Ordering::Relaxed) {
-            return Err(stt::CANCELLED.into());
+            return Err(tr!("cancelled").into());
         }
         on_progress((i * 100 / segments.len().max(1)) as i32);
         // Whisper 시간이 조금 어긋나 있어도 들어오도록 앞뒤 여유
@@ -89,7 +89,7 @@ pub fn check_asset(
     for (i, (table, id, pron, start, end)) in todo.iter().enumerate() {
         if cancel.load(Ordering::Relaxed) {
             index::store_checks(&mut conn, &done)?; // 계산한 만큼은 저장 → 이어하기
-            return Err(stt::CANCELLED.into());
+            return Err(tr!("cancelled").into());
         }
         if i % 50 == 0 {
             on_progress((i * 100 / todo.len().max(1)) as i32);

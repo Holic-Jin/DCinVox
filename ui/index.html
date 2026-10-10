@@ -10,9 +10,10 @@
   <!-- 프로젝트를 열기 전 시작 화면 -->
   <section id="welcome" class="welcome">
     <h1>DCinVox</h1>
-    <p class="muted">영상 속 목소리로 합성 노래 만들기</p>
-    <button id="btn-open" class="primary big">프로젝트 폴더 열기 / 만들기</button>
-    <p class="muted small">빈 폴더를 고르면 새 프로젝트가 만들어집니다.</p>
+    <p class="muted" data-i18n="app.tagline">영상 속 목소리로 합성 노래 만들기</p>
+    <button id="btn-open" class="primary big" data-i18n="welcome.open">프로젝트 폴더 열기 / 만들기</button>
+    <p class="muted small" data-i18n="welcome.hint">빈 폴더를 고르면 새 프로젝트가 만들어집니다.</p>
+    <select class="lang-select" data-i18n-title="top.language"></select>
     <p class="muted small credit">© HolicJin</p>
   </section>
 
@@ -21,35 +22,36 @@
       <strong class="logo">DCinVox</strong>
       <span id="project-name" class="muted"></span>
       <span class="spacer"></span>
-      <button id="btn-switch">다른 프로젝트</button>
+      <select class="lang-select" data-i18n-title="top.language"></select>
+      <button id="btn-switch" data-i18n="top.switch">다른 프로젝트</button>
     </header>
 
     <aside class="assets">
       <div class="panel-head">
-        <span>영상</span>
-        <button id="btn-import" class="primary">불러오기</button>
+        <span data-i18n="assets.title">영상</span>
+        <button id="btn-import" class="primary" data-i18n="assets.import">불러오기</button>
       </div>
       <ul id="asset-list" class="asset-list"></ul>
-      <p id="asset-empty" class="muted small pad">영상을 불러오세요.<br>영상은 프로젝트의 Assets 폴더에 복사됩니다.</p>
+      <p id="asset-empty" class="muted small pad" data-i18n="assets.empty">영상을 불러오세요.<br>영상은 프로젝트의 Assets 폴더에 복사됩니다.</p>
     </aside>
 
     <section class="stage">
       <video id="player" controls playsinline></video>
-      <div id="player-empty" class="player-empty muted">영상을 선택하면 여기서 재생됩니다</div>
+      <div id="player-empty" class="player-empty muted" data-i18n="player.empty">영상을 선택하면 여기서 재생됩니다</div>
     </section>
 
     <section class="lyrics">
-      <div class="panel-head"><span>가사</span></div>
-      <textarea id="lyrics" placeholder="부를 가사를 입력하세요"></textarea>
+      <div class="panel-head"><span data-i18n="lyrics.title">가사</span></div>
+      <textarea id="lyrics" placeholder="부를 가사를 입력하세요" data-i18n-placeholder="lyrics.placeholder"></textarea>
     </section>
 
     <section class="notes">
       <div class="panel-head">
         <span id="notes-title">음계</span>
         <span class="tabs">
-          <button data-tab="song">음계</button>
-          <button data-tab="result">생성 결과</button>
-          <button data-tab="transcript">인식 결과</button>
+          <button data-tab="song" data-i18n="tab.song">음계</button>
+          <button data-tab="result" data-i18n="tab.result">생성 결과</button>
+          <button data-tab="transcript" data-i18n="tab.transcript">인식 결과</button>
         </span>
       </div>
       <!-- 생성 결과: 가사 조각들. 누르면 그 부분 재생, 우클릭하면 다른 원본으로 교체 -->
@@ -57,106 +59,106 @@
       <!-- 음계 블록: 위아래로 옮기면 음이 바뀜 -->
       <div id="song" class="song" hidden>
         <div class="song-bar">
-          <label>빠르기 <input id="bpm" type="range" min="60" max="180" step="1"><span id="bpm-val"></span></label>
-          <label>키 <select id="key"></select></label>
-          <button id="all-up" title="모든 블록 한 칸 위로">전체 ↑</button>
-          <button id="all-down" title="모든 블록 한 칸 아래로">전체 ↓</button>
+          <label><span data-i18n="song.bpm">빠르기</span> <input id="bpm" type="range" min="60" max="180" step="1"><span id="bpm-val"></span></label>
+          <label><span data-i18n="song.key">키</span> <select id="key"></select></label>
+          <button id="all-up" data-i18n="song.allUp" data-i18n-title="song.allUp.title">전체 ↑</button>
+          <button id="all-down" data-i18n="song.allDown" data-i18n-title="song.allDown.title">전체 ↓</button>
           <span class="sep"></span>
-          <button id="gap-add" title="고른 블록 앞에 쉼 반 박 넣기 (스페이스)">쉼 +½박</button>
-          <button id="gap-sub" title="고른 블록 앞 쉼 반 박 빼기 (백스페이스)">쉼 −½박</button>
+          <button id="gap-add" data-i18n="song.gapAdd" data-i18n-title="song.gapAdd.title">쉼 +½박</button>
+          <button id="gap-sub" data-i18n="song.gapSub" data-i18n-title="song.gapSub.title">쉼 −½박</button>
           <span class="sep"></span>
-          <button data-preset="robot" title="불러온 MIDI 멜로디나 반주에서 딴 원곡 멜로디대로 (없으면 원래 말투에 가까운 음으로)">로봇 오토튠</button>
-          <button data-preset="monotone" title="전부 '도' 한 음으로">한 음으로 쭉</button>
-          <button data-preset="speech" title="원래 억양을 살린 채 옮김">말하기</button>
+          <button data-preset="robot" data-i18n="preset.robot" data-i18n-title="preset.robot.title">로봇 오토튠</button>
+          <button data-preset="monotone" data-i18n="preset.monotone" data-i18n-title="preset.monotone.title">한 음으로 쭉</button>
+          <button data-preset="speech" data-i18n="preset.speech" data-i18n-title="preset.speech.title">말하기</button>
           <span class="sep"></span>
-          <button id="btn-mr" title="노래 반주(MR) 음원을 불러오면 빠르기·키·시작 박을 자동으로 맞춥니다">반주 불러오기</button>
-          <button id="btn-midi" title="노래 멜로디 MIDI 파일의 음을 가사 음절에 순서대로 자동 배정합니다">멜로디(MIDI)</button>
+          <button id="btn-mr" data-i18n="song.mr" data-i18n-title="song.mr.title">반주 불러오기</button>
+          <button id="btn-midi" data-i18n="song.midi" data-i18n-title="song.midi.title">멜로디(MIDI)</button>
           <span class="spacer"></span>
           <button id="adv-toggle">고급 ▸</button>
         </div>
         <div id="mr-bar" class="song-bar mr" hidden>
           <span id="mr-info"></span>
           <span class="sep"></span>
-          <span class="muted small">노래 시작</span>
-          <button id="mr-earlier" title="노래를 한 박 앞당기기">◀ 한 박</button>
+          <span class="muted small" data-i18n="mr.start">노래 시작</span>
+          <button id="mr-earlier" data-i18n="mr.earlier" data-i18n-title="mr.earlier.title">◀ 한 박</button>
           <span id="mr-start" class="small"></span>
-          <button id="mr-later" title="노래를 한 박 늦추기">한 박 ▶</button>
+          <button id="mr-later" data-i18n="mr.later" data-i18n-title="mr.later.title">한 박 ▶</button>
           <span class="spacer"></span>
-          <button id="mr-remove" title="반주 빼기">반주 빼기 ✕</button>
+          <button id="mr-remove" data-i18n="mr.remove" data-i18n-title="mr.remove.title">반주 빼기 ✕</button>
         </div>
         <div id="adv" class="song-bar adv" hidden>
-          <label>음 바꾸는 방식
+          <label><span data-i18n="adv.engine">음 바꾸는 방식</span>
             <select id="engine">
-              <option value="smooth">부드럽게 (기본)</option>
-              <option value="vocoder">기계음 (로봇 강하게)</option>
-              <option value="psola">원음 질감</option>
+              <option value="smooth" data-i18n="adv.engine.smooth">부드럽게 (기본)</option>
+              <option value="vocoder" data-i18n="adv.engine.vocoder">기계음 (로봇 강하게)</option>
+              <option value="psola" data-i18n="adv.engine.psola">원음 질감</option>
             </select>
           </label>
-          <label><input id="flat" type="checkbox"> 음을 평평하게 (로봇)</label>
-          <label><input id="vibrato" type="checkbox"> 비브라토</label>
-          <label>반주 크기 <input id="mr-gain" type="range" min="0" max="2" step="0.05"></label>
-          <button id="sharp" title="선택한 블록 반음 올리기/내리기">선택 블록 반음(#)</button>
-          <span class="muted small">↑↓ 음 바꾸기 · ←→ 블록 고르기 · 스페이스/백스페이스 앞 쉼 ±½박 · 오른쪽 끝을 끌어 길이 · ⌘/Ctrl+Z 되돌리기</span>
+          <label><input id="flat" type="checkbox"> <span data-i18n="adv.flat">음을 평평하게 (로봇)</span></label>
+          <label><input id="vibrato" type="checkbox"> <span data-i18n="adv.vibrato">비브라토</span></label>
+          <label><span data-i18n="adv.mrGain">반주 크기</span> <input id="mr-gain" type="range" min="0" max="2" step="0.05"></label>
+          <button id="sharp" data-i18n="adv.sharp" data-i18n-title="adv.sharp.title">선택 블록 반음(#)</button>
+          <span class="muted small" data-i18n="adv.help">↑↓ 음 바꾸기 · ←→ 블록 고르기 · 스페이스/백스페이스 앞 쉼 ±½박 · 오른쪽 끝을 끌어 길이 · ⌘/Ctrl+Z 되돌리기</span>
         </div>
         <div id="roll" class="roll" tabindex="0"></div>
       </div>
-      <div id="notes-empty" class="muted small pad">생성이 끝나면 여기에 음절 블록이 나타납니다. 블록을 위아래로 옮겨 음을 바꿉니다.</div>
+      <div id="notes-empty" class="muted small pad" data-i18n="song.notesEmpty">생성이 끝나면 여기에 음절 블록이 나타납니다. 블록을 위아래로 옮겨 음을 바꿉니다.</div>
       <!-- 분석 결과: 선택한 영상에서 인식된 단어들. 누르면 그 구간만 재생 -->
       <div id="transcript" class="transcript" hidden></div>
     </section>
 
     <!-- 영역 크기 조절 손잡이 (끌어서 조절, 두 번 누르면 기본 크기) -->
-    <div class="splitter split-left" data-split="left" title="끌어서 영상 목록 너비 조절"></div>
-    <div class="splitter split-right" data-split="right" title="끌어서 가사 칸 너비 조절"></div>
-    <div class="splitter split-notes" data-split="notes" title="끌어서 아래 칸 높이 조절"></div>
+    <div class="splitter split-left" data-split="left" data-i18n-title="split.left"></div>
+    <div class="splitter split-right" data-split="right" data-i18n-title="split.right"></div>
+    <div class="splitter split-notes" data-split="notes" data-i18n-title="split.notes"></div>
 
     <footer class="steps">
-      <button class="step" data-step="analyze"><span class="dot"></span>분석</button>
+      <button class="step" data-step="analyze"><span class="dot"></span><span data-i18n="step.analyze">분석</span></button>
       <span class="arrow">→</span>
-      <button class="step" data-step="generate"><span class="dot"></span>생성</button>
+      <button class="step" data-step="generate"><span class="dot"></span><span data-i18n="step.generate">생성</span></button>
       <span class="arrow">→</span>
-      <button class="step" data-step="convert"><span class="dot"></span>변환</button>
+      <button class="step" data-step="convert"><span class="dot"></span><span data-i18n="step.convert">변환</span></button>
       <span class="arrow">→</span>
-      <button class="step" data-step="export"><span class="dot"></span>내보내기</button>
+      <button class="step" data-step="export"><span class="dot"></span><span data-i18n="step.export">내보내기</span></button>
       <span class="spacer"></span>
       <span id="status" class="muted small"></span>
-      <button id="btn-cancel" hidden>취소</button>
+      <button id="btn-cancel" hidden data-i18n="common.cancel">취소</button>
     </footer>
   </main>
 
-  <!-- 저작권 고지: 생성할 때마다 표시 -->
+  <!-- 저작권 고지: 생성할 때마다 표시. 본문은 고른 언어, 아래 작은 글씨는 세 언어 모두 -->
   <dialog id="disclaimer">
-    <h2>저작권 안내</h2>
-    <p>DCinVox에는 어떠한 영상·음성도 포함되어 있지 않습니다.</p>
-    <p>불러온 영상과 이를 이용해 생성한 결과물의 <strong>저작권·초상권 등 모든 법적 책임은 생성한 사용자 본인에게</strong> 있습니다.
-      권리가 없는 소재를 사용하거나 결과물을 배포하기 전에 반드시 권리 관계를 확인하세요.</p>
-    <p class="muted small">本ソフトウェアに映像・音声は含まれていません。読み込んだ素材および生成物に関する著作権・肖像権等の責任はすべて生成者本人にあります。<br>
+    <h2 data-i18n="disclaimer.title">저작권 안내</h2>
+    <p data-i18n="disclaimer.p1">DCinVox에는 어떠한 영상·음성도 포함되어 있지 않습니다.</p>
+    <p data-i18n="disclaimer.p2">불러온 영상과 이를 이용해 생성한 결과물의 <strong>저작권·초상권 등 모든 법적 책임은 생성한 사용자 본인에게</strong> 있습니다. 권리가 없는 소재를 사용하거나 결과물을 배포하기 전에 반드시 권리 관계를 확인하세요.</p>
+    <p class="muted small">DCinVox에는 영상·음성이 포함되어 있지 않으며, 불러온 소재와 결과물의 모든 법적 책임은 생성한 사용자 본인에게 있습니다.<br>
+      本ソフトウェアに映像・音声は含まれていません。読み込んだ素材および生成物に関する著作権・肖像権等の責任はすべて生成者本人にあります。<br>
       DCinVox includes no video or audio. You, the creator, are solely responsible for copyright and other rights in the material you import and the results you generate.</p>
     <div class="dialog-actions">
-      <button id="disclaimer-cancel">취소</button>
-      <button id="disclaimer-ok" class="primary">동의하고 생성</button>
+      <button id="disclaimer-cancel" data-i18n="common.cancel">취소</button>
+      <button id="disclaimer-ok" class="primary" data-i18n="disclaimer.ok">동의하고 생성</button>
     </div>
   </dialog>
 
   <!-- 내보내기 -->
   <dialog id="export-dlg">
-    <h2>내보내기</h2>
+    <h2 data-i18n="export.title">내보내기</h2>
     <div class="export-options">
-      <label><input type="radio" name="export-kind" value="mp4" checked> 영상 (MP4, 1280×720 — 노래와 반주 포함)</label>
-      <label><input type="radio" name="export-kind" value="wav_mix"> 소리만 (WAV — 반주 포함)</label>
-      <label><input type="radio" name="export-kind" value="wav_vocal"> 목소리만 (WAV — 반주 없이)</label>
-      <label><input type="radio" name="export-kind" value="midi"> 멜로디 (MIDI — 가사 포함, 다른 음악 프로그램용)</label>
+      <label><input type="radio" name="export-kind" value="mp4" checked> <span data-i18n="export.mp4">영상 (MP4, 1280×720 — 노래와 반주 포함)</span></label>
+      <label><input type="radio" name="export-kind" value="wav_mix"> <span data-i18n="export.wavMix">소리만 (WAV — 반주 포함)</span></label>
+      <label><input type="radio" name="export-kind" value="wav_vocal"> <span data-i18n="export.wavVocal">목소리만 (WAV — 반주 없이)</span></label>
+      <label><input type="radio" name="export-kind" value="midi"> <span data-i18n="export.midi">멜로디 (MIDI — 가사 포함, 다른 음악 프로그램용)</span></label>
     </div>
-    <p class="muted small">결과물과 불러온 영상·반주의 저작권·초상권 등 모든 법적 책임은 생성한 사용자 본인에게 있습니다.
-      권리가 없는 소재로 만든 결과물을 배포하기 전에 반드시 권리 관계를 확인하세요.</p>
+    <p class="muted small" data-i18n="export.notice">결과물과 불러온 영상·반주의 저작권·초상권 등 모든 법적 책임은 생성한 사용자 본인에게 있습니다. 권리가 없는 소재로 만든 결과물을 배포하기 전에 반드시 권리 관계를 확인하세요.</p>
     <div class="dialog-actions">
-      <button id="export-cancel">취소</button>
-      <button id="export-ok" class="primary">저장할 곳 고르기</button>
+      <button id="export-cancel" data-i18n="common.cancel">취소</button>
+      <button id="export-ok" class="primary" data-i18n="export.choose">저장할 곳 고르기</button>
     </div>
   </dialog>
 
   <div id="toast" class="toast" hidden></div>
 
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
   <script src="song.js"></script>
 </body>

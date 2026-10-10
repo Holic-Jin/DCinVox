@@ -61,10 +61,10 @@ struct PhoneRef {
 
 impl Aligner {
     pub fn load(model: &Path, vocab: &Path) -> Result<Self, String> {
-        let text = std::fs::read_to_string(vocab).map_err(|e| format!("정렬 어휘 읽기 실패: {e}"))?;
+        let text = std::fs::read_to_string(vocab).map_err(|e| tr!("align_vocab_failed", e))?;
         let vocab: HashMap<String, usize> = serde_json::from_str(&text).map_err(|e| e.to_string())?;
         let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4);
-        let err = |e: &dyn std::fmt::Display| format!("발음 정렬 모델 로드 실패: {e}");
+        let err = |e: &dyn std::fmt::Display| tr!("align_model_failed", e);
         let mut builder = Session::builder()
             .map_err(|e| err(&e))?
             .with_intra_threads(threads.saturating_sub(1).max(1))
@@ -83,7 +83,7 @@ impl Aligner {
         let input: Vec<f32> = pcm.iter().map(|x| (x - mean) / std).collect();
 
         let tensor = Tensor::from_array(([1usize, input.len()], input.into_boxed_slice())).map_err(|e| e.to_string())?;
-        let outputs = self.session.run(ort::inputs![tensor]).map_err(|e| format!("정렬 모델 실행 실패: {e}"))?;
+        let outputs = self.session.run(ort::inputs![tensor]).map_err(|e| tr!("align_run_failed", e))?;
         let (shape, logits) = outputs[0].try_extract_tensor::<f32>().map_err(|e| e.to_string())?;
         let frames = shape[1] as usize;
         let v = shape[2] as usize;
@@ -122,7 +122,7 @@ impl Aligner {
             }
         }
         let tensor = Tensor::from_array(([pieces.len(), len], batch.into_boxed_slice())).map_err(|e| e.to_string())?;
-        let outputs = self.session.run(ort::inputs![tensor]).map_err(|e| format!("정렬 모델 실행 실패: {e}"))?;
+        let outputs = self.session.run(ort::inputs![tensor]).map_err(|e| tr!("align_run_failed", e))?;
         let (shape, logits) = outputs[0].try_extract_tensor::<f32>().map_err(|e| e.to_string())?;
         let (frames, v) = (shape[1] as usize, shape[2] as usize);
         let labels: Vec<usize> = phones.iter().map(|p| p.class).collect();
