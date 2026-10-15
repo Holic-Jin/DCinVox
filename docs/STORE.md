@@ -1,13 +1,15 @@
 # Steam 스토어 문구 (초안)
 
+[한국어](STORE.md) · [English](STORE.en.md) · [日本語](STORE.ja.md)
+
+GitHub 배포가 기본입니다. 아래는 Steam용으로 남겨 둔 초안입니다.
+
 ## 짧은 설명 (300자 이내)
-**한국어:** 영상 속 목소리를 음절 단위로 잘라 내 가사로 이어 붙이고, 블록을 위아래로 옮겨 노래로! 원곡 반주를 넣으면 멜로디도 자동으로 따라 부릅니다. 합성 티 팍팍 나는 그 맛, 이제 클릭 몇 번으로.
 
-**English:** Cut real speech from your videos into syllables, stitch them into your own lyrics, and make them sing by dragging note blocks. Load a backing track and it even follows the original melody. That unmistakable "stitched" sound — in a few clicks.
-
-**日本語:** 動画の声を音節ごとに切り出して、好きな歌詞につなぎ合わせ、ブロックを上下に動かすだけで歌に。原曲の伴奏を読み込めばメロディーも自動でなぞります。あの音MADの味を数クリックで。
+영상 속 목소리를 음절 단위로 잘라 내 가사로 이어 붙이고, 블록을 위아래로 옮겨 노래로! 원곡 반주를 넣으면 멜로디도 자동으로 따라 부릅니다. 합성 티 팍팍 나는 그 맛, 이제 클릭 몇 번으로.
 
 ## 상세 설명
+
 - 🎬 **영상만 넣으면 끝** — 음성 인식으로 말소리를 단어·음절 단위로 정리 (한국어 중심, 일본어·영어 인식)
 - ✍️ **가사대로 이어 붙이기** — 없는 단어는 음절을 모아서, 없는 음절은 비슷한 소리로. 잘라 놓고 다시 들어 보고 가장 또렷한 조각을 자동 선택
 - 🎹 **도레미 블록만 옮기면 노래** — 음악을 몰라도 키 안의 음만 쓰니 틀릴 일 없음. 자음은 그대로, 모음만 늘여서 박자에 맞춤
@@ -22,10 +24,13 @@
 **알림:** 프로그램에는 영상·음성이 들어 있지 않습니다. 불러오는 소재와 결과물의 권리·책임은 사용자에게 있습니다. 결과물은 의도적으로 "합성 티"가 나는 소리이며 자연스러운 가창 합성기가 아닙니다.
 
 ## Steam AI 콘텐츠 공개 (Content Survey → AI Generated Content) 초안
+
 **Live-Generated Content:**
+
 > DCinVox uses AI models that run locally on the user's computer: speech recognition (OpenAI Whisper, MIT license) to transcribe the speech in videos the user imports, and a phoneme recognition model (wav2vec2, Apache-2.0) to locate syllables. Pitch changes use a conventional signal-processing vocoder (WORLD). The app does not generate new voices or images with generative AI; output is assembled from the user's own imported media. No content is included with the app, and no user data is uploaded. Users are responsible for the rights to the media they import; the app shows a notice about this before every generation and export.
 
-**Guardrails (가드레일):** 생성할 때마다·내보낼 때마다 저작권 책임 고지, 앱에 소재 미포함, EULA에 사칭·허위 정보 금지 조항.
+**가드레일:** 생성할 때마다·내보낼 때마다 저작권 책임 고지, 앱에 소재 미포함, EULA에 사칭·허위 정보 금지 조항.
 
 ## 스크린샷·영상 주의
+
 스토어 이미지와 예고편에는 **직접 촬영했거나 사용 허락을 받은 영상·음원만** 쓰세요 (예: 직접 녹화한 영상, 저작권이 만료된 음원).

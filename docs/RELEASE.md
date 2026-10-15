@@ -1,5 +1,7 @@
 # 출시 체크리스트 (GitHub)
 
+[한국어](RELEASE.md) · [English](RELEASE.en.md) · [日本語](RELEASE.ja.md)
+
 배포 경로는 GitHub입니다. Steam 문구·SteamPipe 초안은 `docs/STORE.md`, `steam/`에 남아 있지만 현재는 쓰지 않습니다.
 
 ## A. 계정
@@ -15,7 +17,7 @@
 
 - macOS: `tools/build_ffmpeg_macos.sh` → `cargo tauri build --bundles app`
 - Windows: `.github/workflows/build.yml` (workflow_dispatch 또는 태그 `v*`)
-- 모델은 앱 안이 아니라 **옆 폴더 `models/`** (`models/README.md`)
+- 모델은 앱 안이 아니라 **옆 폴더 `models/`** (`models/README.ko.md`)
 
 ## C. GitHub Release에 올리는 폴더 예
 

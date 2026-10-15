@@ -1,5 +1,7 @@
 # DCinVox — Third-Party Notices / 사용한 공개 소프트웨어
 
+[한국어·English](THIRD_PARTY_NOTICES.md) · [日本語](THIRD_PARTY_NOTICES.ja.md)
+
 DCinVox © HolicJin. DCinVox includes the following third-party software and models. 아래 공개 소프트웨어와 AI 모델을 포함합니다.
 
 ## 함께 배포되는 프로그램·모델 / Bundled components

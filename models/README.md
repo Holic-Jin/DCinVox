@@ -1,5 +1,7 @@
 # Models (not in git)
 
+[한국어](README.ko.md) · [English](README.md) · [日本語](README.ja.md)
+
 Weights are too large for GitHub (about 1.3 GB). Put them in this folder. The app looks next to the executable and in `models/` at the repo root.
 
 ## Whisper large-v3 (MIT)

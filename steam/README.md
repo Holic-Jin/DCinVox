@@ -1,5 +1,7 @@
 # Steam 업로드 (SteamPipe)
 
+[한국어](README.md) · [English](README.en.md) · [日本語](README.ja.md)
+
 Steamworks에서 앱을 만들면 **App ID**와 **Depot ID**(macOS용·Windows용)가 나옵니다.
 아래 vdf 파일의 `APPID`, `DEPOT_MAC`, `DEPOT_WIN` 을 그 숫자로 바꾸세요.
 
