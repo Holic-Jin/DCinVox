@@ -38,10 +38,13 @@ cd src-tauri && cargo tauri build --bundles app
 
 Windows는 `.github/workflows/build.yml` (태그 `v*` 또는 수동 실행). 산출물은 Actions 아티팩트입니다. 모델은 앱 **옆** `models/` 폴더에 둡니다.
 
+쉬운 설치 (배포본이 있으면 컴파일 불필요): [`docs/INSTALL.md`](docs/INSTALL.md).
+
 ## 문서
 
 | | 한국어 | English | 日本語 |
 |---|---|---|---|
+| 쉬운 설치 | [INSTALL.md](docs/INSTALL.md) | [INSTALL.en.md](docs/INSTALL.en.md) | [INSTALL.ja.md](docs/INSTALL.ja.md) |
 | 사용권 | [EULA.md](docs/EULA.md) | [EULA.en.md](docs/EULA.en.md) | [EULA.ja.md](docs/EULA.ja.md) |
 | 출시 | [RELEASE.md](docs/RELEASE.md) | [RELEASE.en.md](docs/RELEASE.en.md) | [RELEASE.ja.md](docs/RELEASE.ja.md) |
 | 스토어 문구 | [STORE.md](docs/STORE.md) | [STORE.en.md](docs/STORE.en.md) | [STORE.ja.md](docs/STORE.ja.md) |

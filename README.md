@@ -38,10 +38,13 @@ cd src-tauri && cargo tauri build --bundles app
 
 Windows: `.github/workflows/build.yml` (tag `v*` or run manually). Artifacts come from Actions. Put models in a `models/` folder **next to** the app.
 
+Easy install (no compiler if you have a prebuilt app): [`docs/INSTALL.en.md`](docs/INSTALL.en.md).
+
 ## Docs
 
 | | 한국어 | English | 日本語 |
 |---|---|---|---|
+| Easy install | [INSTALL.md](docs/INSTALL.md) | [INSTALL.en.md](docs/INSTALL.en.md) | [INSTALL.ja.md](docs/INSTALL.ja.md) |
 | License (EULA) | [EULA.md](docs/EULA.md) | [EULA.en.md](docs/EULA.en.md) | [EULA.ja.md](docs/EULA.ja.md) |
 | Release | [RELEASE.md](docs/RELEASE.md) | [RELEASE.en.md](docs/RELEASE.en.md) | [RELEASE.ja.md](docs/RELEASE.ja.md) |
 | Store copy | [STORE.md](docs/STORE.md) | [STORE.en.md](docs/STORE.en.md) | [STORE.ja.md](docs/STORE.ja.md) |
