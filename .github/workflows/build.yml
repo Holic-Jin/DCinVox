@@ -119,9 +119,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ github.ref_name }}"
-          gh release create "$TAG" \
-            DCinVox-windows-x64.zip \
-            DCinVox-macos-arm64.zip \
-            --title "DCinVox $TAG" \
-            --notes-file docs/GITHUB_RELEASE.md \
-            --latest
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" \
+              DCinVox-windows-x64.zip \
+              DCinVox-macos-arm64.zip \
+              --clobber
+          else
+            gh release create "$TAG" \
+              DCinVox-windows-x64.zip \
+              DCinVox-macos-arm64.zip \
+              --title "DCinVox $TAG" \
+              --notes-file docs/GITHUB_RELEASE.md \
+              --latest
+          fi
