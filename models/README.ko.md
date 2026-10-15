@@ -16,7 +16,7 @@ mkdir -p models
 
 ## 음소 정렬기 (Apache-2.0)
 
-`phoneme-aligner-vocab.json`은 git에 있습니다. ONNX 가중치는 없습니다.
+`phoneme-aligner-vocab.json`은 git과 배포 zip의 `models/`에 있습니다. ONNX 가중치(`phoneme-aligner-int8.onnx`)는 배포 zip에 없습니다. 앱이 받아 오지도 않습니다.
 
 1. [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft)를 받습니다.
 2. 변환:

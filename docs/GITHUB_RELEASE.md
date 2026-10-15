@@ -17,15 +17,17 @@ Cut speech from your videos into syllables, stitch it into lyrics, and turn it i
 
 Unzip and keep the folder together. Do not move only the executable.
 
-- **macOS:** `DCinVox.app` + `models/` beside it. If Gatekeeper blocks it: right-click → Open.
+- **macOS:** `DCinVox.app` + `models/` beside it. This zip is **not** Developer ID signed. After unzipping, run `xattr -cr DCinVox.app` **before** opening. On current macOS the icon often bounces once and quits with no dialog (Gatekeeper SIGKILL). Right-click → Open is usually not enough.
 - **Windows:** `dcinvox.exe` + `ffmpeg.exe` + `models\` in the same folder.
 
 ## Models (required)
 
+The zip includes `models/phoneme-aligner-vocab.json` only. Whisper and ONNX are not shipped.
+
 | File | Where to get it |
 |---|---|
 | `ggml-large-v3-q5_0.bin` | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) |
-| `phoneme-aligner-vocab.json` | this repo, `models/` |
-| `phoneme-aligner-int8.onnx` | convert with `tools/export_aligner.py` |
+| `phoneme-aligner-vocab.json` | this zip, `models/` |
+| `phoneme-aligner-int8.onnx` | convert with `tools/export_aligner.py` (not a download) |
 
 The program includes no video or audio. You are responsible for rights in files you import. See the EULA in `docs/`.

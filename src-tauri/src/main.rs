@@ -690,13 +690,27 @@ fn self_check() -> bool {
     let ff_ok = std::process::Command::new(&ff).arg("-version").output().map(|o| o.status.success()).unwrap_or(false);
     println!("ffmpeg: {} {}", ff.display(), if ff_ok { "OK" } else { "FAILED" });
     ok &= ff_ok;
+    let mut missing = Vec::new();
     for name in [models::WHISPER_MODEL, align::MODEL_FILE, align::VOCAB_FILE] {
         match models::find(name) {
             Ok(p) => println!("model {name}: {} OK", p.display()),
             Err(e) => {
                 println!("model {name}: {e}");
+                missing.push(name);
                 ok = false;
             }
+        }
+    }
+    if !missing.is_empty() {
+        println!("looked in:");
+        for d in models::search_dirs() {
+            println!("  {}", d.display());
+        }
+        if missing.contains(&align::MODEL_FILE) {
+            println!(
+                "note: {onnx} is not in the GitHub zip. Convert it with tools/export_aligner.py (docs/INSTALL.md).",
+                onnx = align::MODEL_FILE
+            );
         }
     }
     println!("{}", if ok { "SELF-CHECK OK" } else { "SELF-CHECK FAILED" });

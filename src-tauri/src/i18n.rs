@@ -36,7 +36,7 @@ const TEXTS: &[(&str, &str, &str, &str)] = &[
     ("align_run_failed", "정렬 모델 실행 실패: {}", "The alignment model failed: {}", "発音合わせモデルの実行に失敗しました: {}"),
     ("stt_model_failed", "음성 인식 모델 로드 실패: {}", "Couldn't load the speech recognition model: {}", "音声認識モデルを読み込めませんでした: {}"),
     ("stt_failed", "음성 인식 실패: {}", "Speech recognition failed: {}", "音声認識に失敗しました: {}"),
-    ("model_missing", "모델 파일({})을 찾을 수 없습니다. 프로그램을 다시 설치해 주세요.", "Model file ({}) not found. Please reinstall the program.", "モデルファイル({})が見つかりません。プログラムを再インストールしてください。"),
+    ("model_missing", "모델 파일({})을 찾을 수 없습니다. 앱 옆 models/ 폴더에 두세요. (docs/INSTALL.md)", "Model file ({}) not found. Put it in the models/ folder next to the app. (docs/INSTALL.md)", "モデルファイル({})が見つかりません。アプリの横の models/ に置いてください。(docs/INSTALL.md)"),
     ("db_error", "색인 DB 오류: {}", "Index database error: {}", "索引データベースのエラー: {}"),
     ("ffmpeg_run_failed", "ffmpeg 실행 실패: {}", "Couldn't run ffmpeg: {}", "ffmpegを実行できませんでした: {}"),
     ("ffmpeg_error", "ffmpeg 오류: {}", "ffmpeg error: {}", "ffmpegのエラー: {}"),

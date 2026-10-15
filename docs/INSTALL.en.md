@@ -15,18 +15,20 @@ The app **does not upload your video**. Analysis and generation run on your comp
 ## In short
 
 1. Get the app (A or B below).
-2. Create a `models/` folder **next to** the app and put three model files in it.
-3. Launch the app.
+2. On macOS, after unzipping, run `xattr -cr DCinVox.app` **first** (otherwise the icon may bounce and quit).
+3. Create a `models/` folder **next to** the app and put three model files in it.
+4. Launch the app.
 
-That is the whole install. You do not need Node or a compiler if you use a prebuilt build.
+That is the whole install. You do not need Node or a compiler if you use a prebuilt app.
 
 ---
 
 ## A. Prebuilt app (easiest)
 
 1. Download the latest build from [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases).
-   - If there is no Release yet, use the `build` workflow artifacts (`DCinVox-macos` / `DCinVox-windows`) on the repo **Actions** tab. Artifacts expire after a while.
+   - If there is no Release yet, use the `build` workflow artifacts (`DCinVox-macos-arm64` / `DCinVox-windows`) on the repo **Actions** tab. Artifacts expire after a while.
 2. Unzip and keep **the whole folder** together. Do not move only the executable (FFmpeg must sit beside it).
+3. The zip **does not include model weights.** Get Whisper and the ONNX file under **Get the models** below. Only `phoneme-aligner-vocab.json` ships in the zip under `models/`.
 
 ### macOS layout
 
@@ -39,10 +41,16 @@ My folder/
    └─ phoneme-aligner-vocab.json
 ```
 
-If macOS says the developer cannot be verified:
+This build is not signed or notarized with an Apple Developer ID. Downloads from Safari or Chrome get `com.apple.quarantine`, and on current macOS the app often **bounces once and quits with no warning**. That is Gatekeeper sending SIGKILL, not an app panic.
 
-- In Finder, **right-click `DCinVox.app` → Open**, or
-- Terminal: `xattr -d com.apple.quarantine DCinVox.app`
+After unzipping, **before** you open the app, remove quarantine in Terminal:
+
+```
+# in the unzipped folder
+xattr -cr DCinVox.app
+```
+
+Then open the app in Finder. **Right-click → Open** often does nothing on current macOS; the app just dies.
 
 ### Windows layout
 
@@ -90,13 +98,13 @@ Windows release builds use `.github/workflows/build.yml`. Shipping details: [REL
 
 ## Get the models (required for both)
 
-The app never downloads weights. Put them in `models/` **next to** the executable (or `.app`).
+The app never downloads weights. Put them in `models/` **next to** the executable (or `.app`). Missing models do not crash at launch; they fail later during analysis or alignment.
 
 | File | Rough size | How to get it |
 |---|---|---|
-| `ggml-large-v3-q5_0.bin` | ~1 GB | Download from [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) (MIT) |
-| `phoneme-aligner-vocab.json` | small | Already in this repo under `models/` — copy it |
-| `phoneme-aligner-int8.onnx` | the rest | Convert the Hugging Face model once (Apache-2.0) |
+| `ggml-large-v3-q5_0.bin` | ~1 GB | Download from [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) (MIT). **Not in the zip** |
+| `phoneme-aligner-vocab.json` | small | In the release zip under `models/`, or copy from this repo |
+| `phoneme-aligner-int8.onnx` | the rest | Convert the Hugging Face model once (Apache-2.0). **Not in the zip — you convert it** |
 
 Whisper example (repo root or next to the app):
 
@@ -122,7 +130,7 @@ More detail: [models/README.md](../models/README.md).
 
 1. The UI follows the OS language. Switch **한국어 / English / 日本語** from the top right.
 2. You are responsible for copyright and portrait rights in files you import. Do not use the app for impersonation, disinformation, or non-consensual synthesis. [EULA.en.md](EULA.en.md)
-3. To verify the install, in a terminal:
+3. To verify the install, in a terminal (on macOS, after removing quarantine):
 
 ```
 # macOS (binary inside the app)
@@ -132,7 +140,7 @@ DCinVox.app/Contents/MacOS/dcinvox --self-check
 dcinvox.exe --self-check
 ```
 
-You want `ffmpeg: … OK` and valid model paths.
+You want `ffmpeg: … OK`. If Whisper or ONNX are not in place yet, `SELF-CHECK FAILED` plus the search paths is expected. If the command **dies with no output** or exit code 137, quarantine is still on — not an app bug. Run `xattr -cr DCinVox.app` again.
 
 ---
 
@@ -140,9 +148,10 @@ You want `ffmpeg: … OK` and valid model paths.
 
 | Symptom | Check |
 |---|---|
-| Missing model | `models/` is **beside** the app, and file names match the table **exactly** |
+| Icon bounces once then quits / `--self-check` dies immediately | Remove quarantine with `xattr -cr DCinVox.app`. Right-click → Open is often not enough |
+| Missing model | `models/` is **beside** the app, and file names match the table **exactly**. ONNX is not in the zip; convert it with `export_aligner.py` |
 | Video will not open / convert | On Windows, `ffmpeg.exe` is next to `dcinvox.exe`. On macOS, keep the `.app` intact |
-| macOS will not open the app | Right-click → Open, or remove the quarantine attribute |
+| macOS will not open the app | Remove quarantine (`xattr -cr`). This build has no Developer ID signature |
 | First launch is slow | Normal — it is reading a large model from disk |
 | Out of memory | On 8 GB machines, close other programs |
 

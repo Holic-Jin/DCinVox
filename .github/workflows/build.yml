@@ -50,17 +50,19 @@ jobs:
       - name: Collect
         shell: bash
         run: |
-          mkdir -p dist
+          mkdir -p dist/models
           cp src-tauri/target/release/dcinvox.exe dist/
           cp src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe dist/ffmpeg.exe
           cp docs/THIRD_PARTY_NOTICES.md docs/EULA.md dist/
-      # 실행 점검: DLL이 다 로드되고 동봉 ffmpeg가 도는지 (모델은 저장소에 없어서 모델 항목은 실패가 정상)
+          cp models/phoneme-aligner-vocab.json dist/models/
+      # 실행 점검: DLL이 다 로드되고 동봉 ffmpeg가 도는지 (큰 모델은 저장소에 없어서 Whisper·ONNX는 실패가 정상)
       - name: Smoke test (--self-check)
         shell: bash
         run: |
           out="$(./dist/dcinvox.exe --self-check 2>&1 || true)"
           echo "$out"
           echo "$out" | grep -q "ffmpeg: .* OK"
+          echo "$out" | grep -q "phoneme-aligner-vocab.json"
       - uses: actions/upload-artifact@v4
         with:
           name: DCinVox-windows
@@ -91,10 +93,21 @@ jobs:
           mkdir -p dist
           cp -R src-tauri/target/release/bundle/macos/DCinVox.app dist/
           cp docs/THIRD_PARTY_NOTICES.md docs/EULA.md dist/
+      # .app zip은 macOS의 ditto로만 만든다. Linux에서 다시 압축하면 CodeResources가 깨져
+      # 다운로드 후 Gatekeeper가 SIGKILL(종료 코드 137)로 죽여 “크래시”처럼 보인다.
+      - name: Sign (adhoc) and zip on macOS
+        run: tools/package_macos.sh dist DCinVox-macos-arm64.zip
+      - name: Smoke test (--self-check)
+        run: |
+          out="$(./dist/DCinVox.app/Contents/MacOS/dcinvox --self-check 2>&1 || true)"
+          echo "$out"
+          echo "$out" | grep -q "ffmpeg: .* OK"
+          echo "$out" | grep -q "phoneme-aligner-vocab.json"
       - uses: actions/upload-artifact@v4
         with:
-          name: DCinVox-macos
-          path: dist
+          name: DCinVox-macos-arm64
+          path: DCinVox-macos-arm64.zip
+          compression-level: 0
 
   publish:
     needs: [windows, macos]
@@ -108,12 +121,12 @@ jobs:
           path: dist-windows
       - uses: actions/download-artifact@v4
         with:
-          name: DCinVox-macos
-          path: dist-macos
-      - name: Zip artifacts
+          name: DCinVox-macos-arm64
+          path: .
+      - name: Zip Windows only
         run: |
+          test -f DCinVox-macos-arm64.zip
           (cd dist-windows && zip -r ../DCinVox-windows-x64.zip .)
-          (cd dist-macos && zip -ry ../DCinVox-macos-arm64.zip .)
       - name: GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

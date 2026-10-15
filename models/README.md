@@ -16,7 +16,7 @@ mkdir -p models
 
 ## Phoneme aligner (Apache-2.0)
 
-`phoneme-aligner-vocab.json` is in git. The ONNX weights are not.
+`phoneme-aligner-vocab.json` is in git and in the release zip under `models/`. The ONNX weights (`phoneme-aligner-int8.onnx`) are not in the zip, and the app does not download them.
 
 1. Download [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft).
 2. Convert:

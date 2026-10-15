@@ -15,8 +15,9 @@
 ## 한눈에 보기
 
 1. 앱을 받습니다 (아래 A 또는 B).
-2. `models/` 폴더를 앱 **옆**에 만들고, 모델 파일 3개를 넣습니다.
-3. 앱을 실행합니다.
+2. macOS면 압축을 푼 뒤 **먼저** `xattr -cr DCinVox.app` (안 하면 아이콘만 튕기고 꺼질 수 있음).
+3. `models/` 폴더를 앱 **옆**에 만들고, 모델 파일 3개를 넣습니다.
+4. 앱을 실행합니다.
 
 끝입니다. Node나 개발 도구는 배포본을 쓸 때 필요 없습니다.
 
@@ -25,8 +26,9 @@
 ## A. 배포본으로 설치 (가장 쉬움)
 
 1. [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases)에서 최신 버전을 받습니다.
-   - 아직 Release가 없으면 저장소 **Actions**의 `build` 작업 산출물(`DCinVox-macos` / `DCinVox-windows`)을 씁니다. 산출물은 일정 기간 후 만료됩니다.
+   - 아직 Release가 없으면 저장소 **Actions**의 `build` 작업 산출물(`DCinVox-macos-arm64` / `DCinVox-windows`)을 씁니다. 산출물은 일정 기간 후 만료됩니다.
 2. 압축을 풀고 **폴더 전체를** 한곳에 둡니다. 실행 파일만 다른 곳으로 옮기지 마세요 (FFmpeg가 옆에 있어야 합니다).
+3. zip에는 **모델 가중치가 없습니다.** Whisper와 ONNX는 아래 **모델 받기**에서 따로 준비합니다. `phoneme-aligner-vocab.json`만 배포 zip의 `models/`에 들어 있습니다.
 
 ### macOS 폴더 예
 
@@ -39,10 +41,16 @@
    └─ phoneme-aligner-vocab.json
 ```
 
-처음 열 때 “확인되지 않은 개발자” 경고가 나오면:
+이 배포본은 Apple Developer ID로 서명·공증되어 있지 않습니다. Safari나 Chrome으로 받으면 `com.apple.quarantine`가 붙고, **경고창 없이 아이콘만 튕기다 바로 꺼지는** 경우가 많습니다. 프로그램이 패닉한 것이 아니라 macOS Gatekeeper가 프로세스를 강제 종료(SIGKILL)한 것입니다.
 
-- Finder에서 `DCinVox.app`을 **우클릭 → 열기**, 또는
-- 터미널: `xattr -d com.apple.quarantine DCinVox.app`
+압축을 푼 **뒤**, 앱을 열기 **전에** 터미널에서 격리를 제거하세요:
+
+```
+# 압축을 푼 폴더에서
+xattr -cr DCinVox.app
+```
+
+그다음에 Finder에서 앱을 엽니다. 예전처럼 “우클릭 → 열기”만으로는 경고가 안 뜨고 바로 죽는 경우가 있습니다.
 
 ### Windows 폴더 예
 
@@ -90,13 +98,13 @@ Windows 배포 빌드는 `.github/workflows/build.yml`을 쓰면 됩니다. 자�
 
 ## 모델 받기 (공통, 필수)
 
-앱은 모델을 내려받지 않습니다. **실행 파일(또는 `.app`) 옆** `models/`에 직접 둡니다.
+앱은 모델을 내려받지 않습니다. **실행 파일(또는 `.app`) 옆** `models/`에 직접 둡니다. 없어도 실행 직후 크래시의 원인은 아니고, 분석·정렬 단계에서 오류가 납니다.
 
 | 파일 | 대략 크기 | 받는 방법 |
 |---|---|---|
-| `ggml-large-v3-q5_0.bin` | ~1 GB | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp)에서 다운로드 (MIT) |
-| `phoneme-aligner-vocab.json` | 작음 | 이 저장소 `models/`에 이미 있음. 그대로 복사 |
-| `phoneme-aligner-int8.onnx` | 나머지 | Hugging Face 모델을 한 번 변환 (Apache-2.0) |
+| `ggml-large-v3-q5_0.bin` | ~1 GB | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp)에서 다운로드 (MIT). **zip에 없음** |
+| `phoneme-aligner-vocab.json` | 작음 | 배포 zip의 `models/` 또는 이 저장소 `models/` |
+| `phoneme-aligner-int8.onnx` | 나머지 | Hugging Face 모델을 한 번 변환 (Apache-2.0). **zip에 없음 — 직접 변환** |
 
 Whisper 예 (저장소 루트 또는 앱 옆):
 
@@ -122,7 +130,7 @@ python tools/export_aligner.py /path/to/wav2vec2-xlsr-53-espeak-cv-ft models
 
 1. 화면 언어는 컴퓨터 언어를 따릅니다. 오른쪽 위에서 **한국어 / English / 日本語**로 바꿀 수 있습니다.
 2. 불러오는 영상·음원의 **저작권·초상권은 사용자 책임**입니다. 사칭·허위 정보·비동의 합성에 쓰지 마세요. [EULA.md](EULA.md)
-3. 설치가 맞는지 확인하려면 터미널에서:
+3. 설치가 맞는지 확인하려면 터미널에서 (macOS는 위에서 격리를 제거한 뒤):
 
 ```
 # macOS (앱 안 실행 파일)
@@ -132,7 +140,7 @@ DCinVox.app/Contents/MacOS/dcinvox --self-check
 dcinvox.exe --self-check
 ```
 
-`ffmpeg: … OK`와 모델 경로가 보이면 준비된 것입니다.
+`ffmpeg: … OK`가 나와야 합니다. Whisper·ONNX를 아직 안 넣었으면 `SELF-CHECK FAILED`와 찾은 경로가 출력되는 것이 정상입니다. 명령이 **아무 글자 없이 바로 죽거나** 종료 코드 137이면, 앱 버그가 아니라 격리가 남아 있는 것입니다. `xattr -cr DCinVox.app`을 다시 하세요.
 
 ---
 
@@ -140,9 +148,10 @@ dcinvox.exe --self-check
 
 | 증상 | 확인 |
 |---|---|
-| 모델이 없다고 함 | `models/`가 앱 **옆**인지, 파일 이름이 위 표와 **완전히 같은지** |
+| 아이콘이 한 번 튕기고 바로 꺼짐 / `--self-check`가 즉시 죽음 | `xattr -cr DCinVox.app`으로 격리 제거. 우클릭 → 열기만으로는 부족한 경우가 많음 |
+| 모델이 없다고 함 | `models/`가 앱 **옆**인지, 파일 이름이 위 표와 **완전히 같은지**. ONNX는 zip에 없으므로 `export_aligner.py`로 변환했는지 |
 | 영상이 안 열림 / 변환 실패 | Windows는 `ffmpeg.exe`가 `dcinvox.exe`와 같은 폴더인지. macOS는 `.app`을 통째로 두었는지 |
-| macOS에서 앱이 안 열림 | 우클릭 → 열기, 또는 격리 속성 제거 |
+| macOS에서 앱이 안 열림 | 격리 속성 제거 (`xattr -cr`). Developer ID 서명이 없는 배포본입니다 |
 | 처음 실행이 느림 | 정상입니다. 큰 모델을 디스크에서 읽습니다 |
 | 메모리 부족 | 8GB RAM 기기에서는 다른 프로그램을 줄이세요 |
 

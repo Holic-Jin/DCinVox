@@ -9,15 +9,16 @@ Distribution is GitHub.
 | Step | Task | Notes |
 |---|---|---|
 | 1 | GitHub repo `Holic-Jin/DCinVox` | Source only. Do not commit model weights, sample audio, or FFmpeg binaries |
-| 2 | (Optional) Apple Developer / Windows code signing | Needed to reduce Gatekeeper / SmartScreen warnings if people download `.app` / `.exe` from GitHub |
+| 2 | (Optional) Apple Developer / Windows code signing | Needed to reduce Gatekeeper / SmartScreen if people download `.app` / `.exe` from GitHub. Without Developer ID + notarization, users must run `xattr -cr` |
 | 3 | Legal review of the EULA | `docs/EULA.en.md` is a draft |
 | 4 | Screenshots and trailer | Only footage you shot or have permission to use |
 
 ## B. Build
 
-- macOS: `tools/build_ffmpeg_macos.sh` → `cargo tauri build --bundles app`
+- macOS: `tools/build_ffmpeg_macos.sh` → `cargo tauri build --bundles app` → `tools/package_macos.sh` (zip with ditto on a Mac, adhoc bundle signature)
 - Windows: `.github/workflows/build.yml` (`workflow_dispatch` or tag `v*`)
-- Models sit in a `models/` folder **beside** the app (`models/README.md`)
+- **Zip the `.app` only on macOS.** Re-zipping on Linux breaks the bundle signature, and Gatekeeper then SIGKILLs the app on first launch
+- Models sit in a `models/` folder **beside** the app (`models/README.md`). The release zip ships vocab JSON only, not Whisper or ONNX
 
 ## C. Example GitHub Release layout
 

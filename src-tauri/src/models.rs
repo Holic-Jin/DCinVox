@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 pub const WHISPER_MODEL: &str = "ggml-large-v3-q5_0.bin";
 
-fn search_dirs() -> Vec<PathBuf> {
+pub(crate) fn search_dirs() -> Vec<PathBuf> {
     let mut dirs = Vec::new();
     if let Ok(exe) = std::env::current_exe() {
         if let Some(dir) = exe.parent() {
@@ -29,4 +29,22 @@ pub fn find(name: &str) -> Result<PathBuf, String> {
         .map(|d| d.join(name))
         .find(|p| p.is_file())
         .ok_or_else(|| tr!("model_missing", name))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn finds_vocab_from_repo_models() {
+        let path = find("phoneme-aligner-vocab.json").expect("vocab is in repo models/");
+        assert!(path.ends_with("phoneme-aligner-vocab.json"));
+    }
+
+    #[test]
+    fn missing_model_mentions_install_docs() {
+        let err = find("definitely-not-a-model.bin").unwrap_err();
+        assert!(err.contains("definitely-not-a-model.bin"));
+        assert!(err.contains("INSTALL.md"), "{err}");
+    }
 }

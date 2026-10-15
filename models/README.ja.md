@@ -16,7 +16,7 @@ mkdir -p models
 
 ## 音素アライナー (Apache-2.0)
 
-`phoneme-aligner-vocab.json` は git にあります。ONNX の重みはありません。
+`phoneme-aligner-vocab.json` は git と配布 zip の `models/` にあります。ONNX の重み（`phoneme-aligner-int8.onnx`）は zip に入っておらず、アプリもダウンロードしません。
 
 1. [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft) を入手します。
 2. 変換:
