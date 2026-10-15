@@ -2,7 +2,7 @@
 
 Cut speech from your videos into syllables, stitch it into lyrics, and turn it into a song with pitch blocks. All processing stays on your computer.
 
-**1.0.2:** The zip now includes `export_aligner.py`, `aligner-requirements.txt`, and `CONVERT.txt`. v1.0.1 did not. numpy/torch are still not in the zip — run `python3 -m pip install -r aligner-requirements.txt` with the same python3 before converting.
+**1.0.2:** The zip now includes `export_aligner.py`, `requirements.txt`, and `CONVERT.txt`. v1.0.1 did not. numpy/torch are still not in the zip — run `python3 -m pip install -r requirements.txt` with the same python3 before converting.
 
 **1.0.1:** macOS zip packed on a Mac (`ditto` + adhoc bundle signature). After unzipping, still run `xattr -cr DCinVox.app` before opening — this build is not Developer ID signed.
 
@@ -26,7 +26,7 @@ Unzip and keep the folder together. Do not move only the executable.
 
 ## Models (required)
 
-The zip includes `models/phoneme-aligner-vocab.json`, `export_aligner.py`, `aligner-requirements.txt`, and `CONVERT.txt`. Whisper weights and the ONNX file are not shipped (Hugging Face). Analyze needs all three model files next to the app.
+The zip includes `models/phoneme-aligner-vocab.json`, `export_aligner.py`, `requirements.txt`, and `CONVERT.txt`. Whisper weights and the ONNX file are not shipped (Hugging Face). Analyze needs all three model files next to the app.
 
 | File | Where to get it |
 |---|---|
