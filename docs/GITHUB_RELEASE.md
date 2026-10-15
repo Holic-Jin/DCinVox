@@ -1,6 +1,8 @@
-# DCinVox 1.0.0
+# DCinVox 1.0.1
 
 Cut speech from your videos into syllables, stitch it into lyrics, and turn it into a song with pitch blocks. All processing stays on your computer.
+
+**1.0.1:** macOS zip is now packed on a Mac (`ditto` + adhoc bundle signature). v1.0.0 could quit immediately after download (Gatekeeper SIGKILL). After unzipping, still run `xattr -cr DCinVox.app` before opening — this build is not Developer ID signed.
 
 **This download does not include AI models** (about 1.3 GB). Put them in a `models/` folder next to the app. Guides:
 

@@ -1,6 +1,6 @@
 [package]
 name = "dcinvox"
-version = "1.0.0"
+version = "1.0.1"
 description = "DCinVox - 영상 속 목소리로 합성 노래 만들기"
 authors = ["HolicJin"]
 edition = "2021"
