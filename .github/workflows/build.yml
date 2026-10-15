@@ -1,10 +1,13 @@
 # Windows·macOS 배포용 빌드. 결과물(실행파일 + ffmpeg)은 Actions 아티팩트.
-# 모델 파일(1.4GB)은 저장소에 넣지 않음. 받는 방법: models/README.md
+# 태그 v* 푸시 시 GitHub Release에 zip을 올립니다. 모델(약 1.3GB)은 넣지 않음: models/README.md
 name: build
 on:
   workflow_dispatch:
   push:
     tags: ["v*"]
+
+permissions:
+  contents: write
 
 jobs:
   ffmpeg-windows:
@@ -92,3 +95,33 @@ jobs:
         with:
           name: DCinVox-macos
           path: dist
+
+  publish:
+    needs: [windows, macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: DCinVox-windows
+          path: dist-windows
+      - uses: actions/download-artifact@v4
+        with:
+          name: DCinVox-macos
+          path: dist-macos
+      - name: Zip artifacts
+        run: |
+          (cd dist-windows && zip -r ../DCinVox-windows-x64.zip .)
+          (cd dist-macos && zip -ry ../DCinVox-macos-arm64.zip .)
+      - name: GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          gh release create "$TAG" \
+            DCinVox-windows-x64.zip \
+            DCinVox-macos-arm64.zip \
+            --title "DCinVox $TAG" \
+            --notes-file docs/GITHUB_RELEASE.md \
+            --latest
