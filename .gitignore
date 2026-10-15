@@ -1,8 +1,30 @@
+# OS
+.DS_Store
+**/.DS_Store
+
+# Model weights (GitHub file limit is 100MB; see models/README.md)
 models/*.bin
 models/*.onnx
-third_party/*.tar.xz
+models/*.gguf
+models/*.ggml
+
+# Local media / listening tests — do not publish other people's voices or songs
 samples/
+
+# FFmpeg source tarball and bundled binaries (build with tools/build_ffmpeg_*.sh)
+third_party/
 src-tauri/binaries/
-.DS_Store
+
+# Rust / Tauri build output
+src-tauri/target/
+src-tauri/gen/
+
+# SteamPipe local upload folders (SDK itself must never be committed)
 steam/content/
 steam/output/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key

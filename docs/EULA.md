@@ -6,7 +6,7 @@
 **대상 소프트웨어:** DCinVox 및 함께 설치되는 구성요소·AI 모델 ("소프트웨어")
 
 ## 1. 사용권
-제공자는 소프트웨어를 구매(또는 정당하게 취득)한 사용자에게 개인적·비독점적·양도 불가능한 사용권을 부여합니다. 소프트웨어로 만든 결과물을 상업적으로 이용하는 것은 아래 3조를 지키는 한 제한하지 않습니다.
+제공자는 소프트웨어를 GitHub 등에서 정당하게 받은 사용자에게 개인적·비독점적·양도 불가능한 사용권을 부여합니다. 소스는 열람·개인 빌드용이며, 재배포·재판매는 `LICENSE`와 공개 소프트웨어 라이선스가 허용하는 범위를 따릅니다. 소프트웨어로 만든 결과물을 상업적으로 이용하는 것은 아래 3조를 지키는 한 제한하지 않습니다.
 
 ## 2. 금지 사항
 - 소프트웨어를 역설계·재배포·재판매하는 행위 (공개 소프트웨어 라이선스가 허용하는 범위는 예외)
@@ -40,7 +40,7 @@
 
 # DCinVox End User License Agreement (draft)
 
-1. **License.** HolicJin grants you a personal, non-exclusive, non-transferable license to use DCinVox. Commercial use of your output is allowed, provided you comply with section 3.
+1. **License.** HolicJin grants you a personal, non-exclusive, non-transferable license to use DCinVox obtained from GitHub or another legitimate source. Source is for viewing and personal builds; redistribution follows `LICENSE` and the included open-source licenses. Commercial use of your output is allowed, provided you comply with section 3.
 2. **Restrictions.** Do not reverse engineer, redistribute or resell the software, except as permitted by the included open-source licenses. Do not use it for impersonation, defamation, fraud or disinformation.
 3. **Your content and responsibility.** DCinVox includes no video or audio. **You are solely responsible** for copyright, portrait and publicity rights in the material you import and in the results you create. Obtain any required permission before using or distributing material you do not own. Do not distribute results in a way that suggests a real person actually said or sang them.
 4. **Privacy.** Your media and lyrics are processed only on your computer and are never uploaded. Playback uses a local-only connection (127.0.0.1).

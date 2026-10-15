@@ -1,5 +1,5 @@
-# Windows·macOS 배포용 빌드. 결과물(실행파일 + ffmpeg)은 Actions 아티팩트로 내려받아 Steam depot에 넣음.
-# 모델 파일(1.4GB)은 저장소에 넣지 않고 depot을 만들 때 로컬 models/ 폴더를 함께 올림.
+# Windows·macOS 배포용 빌드. 결과물(실행파일 + ffmpeg)은 Actions 아티팩트.
+# 모델 파일(1.4GB)은 저장소에 넣지 않음. 받는 방법: models/README.md
 name: build
 on:
   workflow_dispatch:
