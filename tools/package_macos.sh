@@ -25,6 +25,7 @@ if [ -f "$ROOT/models/phoneme-aligner-vocab.json" ]; then
 fi
 cp -f "$ROOT/docs/THIRD_PARTY_NOTICES.md" "$DIST/" 2>/dev/null || true
 cp -f "$ROOT/docs/EULA.md" "$DIST/" 2>/dev/null || true
+cp -f "$ROOT/tools/export_aligner.py" "$DIST/"
 
 # Mach-O adhoc만 있으면 CodeResources가 없어 검증이 실패한다. 번들 단위로 다시 서명.
 codesign --force --deep --sign - "$APP"

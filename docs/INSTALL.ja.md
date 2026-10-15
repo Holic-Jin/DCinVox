@@ -98,29 +98,48 @@ Windows の配布ビルドは `.github/workflows/build.yml` を使います。�
 
 ## モデルの入手（どちらでも必須）
 
-アプリはモデルを自動ダウンロードしません。実行ファイル（または `.app`）の**横**の `models/` に置いてください。モデルが無くても起動直後のクラッシュ原因にはなりません。解析・発音合わせの段階で失敗します。
+アプリはモデルを自動ダウンロードしません。実行ファイル（または `.app`）の**横**の `models/` に置いてください。無くても起動直後のクラッシュ原因にはなりませんが、**解析ボタンは次の3つが揃わないと動きません。**
+
+macOS では `DCinVox.app` と**同じフォルダ**の `models/` です。`.app` の中ではありません。
 
 | ファイル | おおよその大きさ | 入手方法 |
 |---|---|---|
-| `ggml-large-v3-q5_0.bin` | 約 1 GB | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) からダウンロード（MIT）。**zip には無い** |
-| `phoneme-aligner-vocab.json` | 小さい | 配布 zip の `models/`、またはこのリポジトリの `models/` |
-| `phoneme-aligner-int8.onnx` | 残り | Hugging Face のモデルを一度変換（Apache-2.0）。**zip には無い — 自分で変換** |
+| `ggml-large-v3-q5_0.bin` | 約 1 GB | 下の Whisper。**zip には無い** |
+| `phoneme-aligner-vocab.json` | 小さい | 配布 zip の `models/` に入っている |
+| `phoneme-aligner-int8.onnx` | 約 300 MB | 下の ONNX 変換。**zip には無い。`.onnx` として落とすファイルではない** |
 
-Whisper の例（リポジトリ直下、またはアプリの横）:
+### Whisper（`ggml-large-v3-q5_0.bin`）
+
+1. この**直接リンク**で入手します（ページではなくファイル）:  
+   https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
+2. アプリの横の `models/ggml-large-v3-q5_0.bin` に置きます。名前は一字も違えてはいけません。
+3. 大きさは**約 1GB**です。数MBなら HTML を保存しています。
+
+### 音素アライナー ONNX（`phoneme-aligner-int8.onnx`）— 変換が必要
+
+Hugging Face にこの名前の `.onnx` はありません。  
+元は [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft)（Apache-2.0）で、配布 zip の `export_aligner.py`（リポジトリでは `tools/export_aligner.py`）が一度変換して `phoneme-aligner-int8.onnx` を作ります。解析の 2/3（発音合わせ）に必要です。
+
+1. Python 3.10 以降を入れます。
+2. ターミナル:
 
 ```
-mkdir -p models
-# ブラウザで入手するか:
-# https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
+python3 -m pip install torch transformers onnx onnxruntime numpy huggingface_hub
 ```
 
-音素アライナーの ONNX（Python、一度だけ）:
+3. zip を展開したフォルダ（またはリポジトリ直下）で、**出力をアプリ横の models に**します:
 
 ```
-python tools/export_aligner.py /path/to/wav2vec2-xlsr-53-espeak-cv-ft models
+# macOS 例: アプリが ~/DCinVox/DCinVox.app のとき
+python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ~/DCinVox/models
+
+# リポジトリで開発するとき
+python3 tools/export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft models
 ```
 
-元モデル: [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft)
+第1引数は手元のフォルダではなく**モデル ID そのままで**構いません。スクリプトが取得して変換します。初回は時間がかかります。
+
+4. 終わると `models/phoneme-aligner-int8.onnx` ができます（数百 MB 程度）。これが無いと解析は始まりません。
 
 詳しくは [models/README.ja.md](../models/README.ja.md) です。
 
@@ -149,7 +168,9 @@ dcinvox.exe --self-check
 | 症状 | 確認 |
 |---|---|
 | アイコンが一度跳ねてすぐ終了 / `--self-check` が即終了 | `xattr -cr DCinVox.app` で隔離を外す。右クリック → 開くだけでは足りないことが多い |
-| モデルが無いと言われる | `models/` がアプリの**横**か、ファイル名が上の表と**完全に同じ**か。ONNX は zip に無いので `export_aligner.py` で変換したか |
+| モデルが無いと言われる | `models/` が `.app` / `exe` と**同じフォルダ**か。エラーに探したパスが出ます。ONNX は `export_aligner.py` で変換 |
+| Whisper を入れたのに ggml が無いと言われる | `.app` の中ではなく**横**の `models/` か、サイズが約 1GB か。macOS は `xattr -cr` のあと展開フォルダから開き直す（一時コピーだと元の models が見えない） |
+| ONNX が無いとだけ言われる | 正常です。zip にありません。上の変換をアプリ横 `models/` 向けに実行 |
 | 動画が開けない / 変換できない | Windows は `ffmpeg.exe` が `dcinvox.exe` と同じフォルダか。macOS は `.app` をバラバラにしていないか |
 | macOS でアプリが開かない | 隔離属性を削除（`xattr -cr`）。Developer ID 署名の無い配布です |
 | 初回起動が遅い | 正常です。大きなモデルをディスクから読んでいます |

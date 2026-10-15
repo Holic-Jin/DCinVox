@@ -182,6 +182,11 @@ async fn analyze(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<An
             }
         };
 
+        // 세 모델이 모두 있어야 분석이 끝난다. Whisper만 있고 ONNX가 없을 때 Whisper 없음으로 보이지 않게 먼저 확인.
+        if let Err(e) = models::require(&[models::WHISPER_MODEL, models::ALIGN_MODEL, models::ALIGN_VOCAB]) {
+            return (vec![e], false);
+        }
+
         // 1) 음성 인식 — 모델은 이 블록 안에서만 메모리에 존재 (8GB 대응: 끝나면 해제 후 정렬 모델 로드)
         if !pending.is_empty() {
             let recognizer = match models::find(models::WHISPER_MODEL).and_then(|m| stt::Recognizer::load(&m)) {
@@ -209,8 +214,8 @@ async fn analyze(app: tauri::AppHandle, state: State<'_, AppState>) -> Result<An
 
         // 2) 음소 정렬 (음절 단위 정밀 자르기) → 3) 조각 미리 듣기 (같은 모델 사용)
         if !to_align.is_empty() || !to_check.is_empty() {
-            let mut aligner = match models::find(align::MODEL_FILE)
-                .and_then(|m| models::find(align::VOCAB_FILE).map(|v| (m, v)))
+            let mut aligner = match models::find(models::ALIGN_MODEL)
+                .and_then(|m| models::find(models::ALIGN_VOCAB).map(|v| (m, v)))
                 .and_then(|(m, v)| align::Aligner::load(&m, &v))
             {
                 Ok(a) => a,
@@ -289,8 +294,8 @@ async fn generate(lyrics: String, app: tauri::AppHandle, state: State<'_, AppSta
         }
         // 잘라 놓고 들었을 때 가장 또렷한 후보 고르기 (정렬 모델은 이 블록 안에서만 메모리에 존재)
         {
-            let mut aligner = models::find(align::MODEL_FILE)
-                .and_then(|m| models::find(align::VOCAB_FILE).map(|v| (m, v)))
+            let mut aligner = models::find(models::ALIGN_MODEL)
+                .and_then(|m| models::find(models::ALIGN_VOCAB).map(|v| (m, v)))
                 .and_then(|(m, v)| align::Aligner::load(&m, &v))?;
             verify::rerank(&r, &mut clips, &mut aligner, verify::WEIGHT, |done, total| {
                 let _ = app.emit("generate-progress", GenerateProgress { stage: "verify", done, total });
@@ -609,7 +614,7 @@ async fn follow_original(app: tauri::AppHandle, state: State<'_, AppState>) -> R
             // 모델은 이 안에서만 메모리에 (8GB 대응: 인식 → 해제 → 정렬)
             let transcript_syllables = {
                 let rec = stt::Recognizer::load(&models::find(models::WHISPER_MODEL)?)?;
-                let mut aligner = align::Aligner::load(&models::find(align::MODEL_FILE)?, &models::find(align::VOCAB_FILE)?)?;
+                let mut aligner = align::Aligner::load(&models::find(models::ALIGN_MODEL)?, &models::find(models::ALIGN_VOCAB)?)?;
                 say("locating");
                 music::original_syllables(&mono16, &contour, &rec, &mut aligner, None, cancel)?
             };
@@ -690,27 +695,16 @@ fn self_check() -> bool {
     let ff_ok = std::process::Command::new(&ff).arg("-version").output().map(|o| o.status.success()).unwrap_or(false);
     println!("ffmpeg: {} {}", ff.display(), if ff_ok { "OK" } else { "FAILED" });
     ok &= ff_ok;
-    let mut missing = Vec::new();
-    for name in [models::WHISPER_MODEL, align::MODEL_FILE, align::VOCAB_FILE] {
-        match models::find(name) {
-            Ok(p) => println!("model {name}: {} OK", p.display()),
-            Err(e) => {
-                println!("model {name}: {e}");
-                missing.push(name);
-                ok = false;
+    let names = [models::WHISPER_MODEL, models::ALIGN_MODEL, models::ALIGN_VOCAB];
+    match models::require(&names) {
+        Ok(()) => {
+            for name in names {
+                println!("model {name}: {} OK", models::find(name).unwrap().display());
             }
         }
-    }
-    if !missing.is_empty() {
-        println!("looked in:");
-        for d in models::search_dirs() {
-            println!("  {}", d.display());
-        }
-        if missing.contains(&align::MODEL_FILE) {
-            println!(
-                "note: {onnx} is not in the GitHub zip. Convert it with tools/export_aligner.py (docs/INSTALL.md).",
-                onnx = align::MODEL_FILE
-            );
+        Err(e) => {
+            println!("{e}");
+            ok = false;
         }
     }
     println!("{}", if ok { "SELF-CHECK OK" } else { "SELF-CHECK FAILED" });

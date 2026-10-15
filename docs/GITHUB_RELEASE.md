@@ -24,12 +24,12 @@ Unzip and keep the folder together. Do not move only the executable.
 
 ## Models (required)
 
-The zip includes `models/phoneme-aligner-vocab.json` only. Whisper and ONNX are not shipped.
+The zip includes `models/phoneme-aligner-vocab.json` and `export_aligner.py`. Whisper and the ONNX weights are not shipped. Analyze needs all three model files next to the app.
 
 | File | Where to get it |
 |---|---|
-| `ggml-large-v3-q5_0.bin` | [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) |
+| `ggml-large-v3-q5_0.bin` | direct file: [ggml-large-v3-q5_0.bin](https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin) (~1 GB) |
 | `phoneme-aligner-vocab.json` | this zip, `models/` |
-| `phoneme-aligner-int8.onnx` | convert with `tools/export_aligner.py` (not a download) |
+| `phoneme-aligner-int8.onnx` | **not a download.** From the unzipped folder: `python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ./models` |
 
 The program includes no video or audio. You are responsible for rights in files you import. See the EULA in `docs/`.

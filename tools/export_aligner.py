@@ -1,13 +1,32 @@
-"""개발용: wav2vec2 음소 인식 모델(HF) → ONNX int8 변환 + 정확도 확인.
+"""wav2vec2 음소 인식 모델(Hugging Face) → phoneme-aligner-int8.onnx.
 
-사용: python export_aligner.py <HF 모델 폴더> <출력 폴더> [확인용 16kHz mono wav]
-결과: phoneme-aligner-int8.onnx, phoneme-aligner-vocab.json  (앱의 models/ 폴더에 넣음)
+사용:
+  python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft /path/to/models
+  python3 export_aligner.py /local/wav2vec2-xlsr-53-espeak-cv-ft /path/to/models
+
+출력 폴더는 앱(또는 .app) 옆의 models/ 이어야 한다.
+결과: phoneme-aligner-int8.onnx, phoneme-aligner-vocab.json
 """
-import json
 import shutil
 import sys
-import wave
 from pathlib import Path
+
+USAGE = """사용: python3 export_aligner.py <HF모델ID 또는 폴더> <출력 models 폴더> [확인용 16kHz mono wav]
+
+예 (배포 zip을 푼 폴더에서, 앱 옆 models 로 출력):
+  python3 -m pip install torch transformers onnx onnxruntime numpy huggingface_hub
+  python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ./models
+
+phoneme-aligner-int8.onnx 는 zip에 없다. Hugging Face에서 .onnx 를 받는 것이 아니라
+facebook/wav2vec2-xlsr-53-espeak-cv-ft 를 받아 여기서 변환한다.
+"""
+
+if len(sys.argv) < 3:
+    sys.stderr.write(USAGE)
+    sys.exit(2)
+
+import json
+import wave
 
 import numpy as np
 import onnxruntime as ort
@@ -15,11 +34,24 @@ import torch
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from transformers import Wav2Vec2ForCTC
 
-src, out = Path(sys.argv[1]), Path(sys.argv[2])
+
+def resolve_src(arg: str) -> Path:
+    p = Path(arg)
+    if p.is_dir() and (p / "config.json").is_file():
+        return p
+    from huggingface_hub import snapshot_download
+
+    print("downloading", arg)
+    return Path(snapshot_download(arg))
+
+
+src = resolve_src(sys.argv[1])
+out = Path(sys.argv[2])
 out.mkdir(parents=True, exist_ok=True)
 fp32 = out / "phoneme-aligner-fp32.onnx"
 int8 = out / "phoneme-aligner-int8.onnx"
 
+print("loading", src)
 model = Wav2Vec2ForCTC.from_pretrained(src).eval()
 
 
@@ -45,7 +77,8 @@ with torch.no_grad():
     )
 quantize_dynamic(str(fp32), str(int8), weight_type=QuantType.QInt8)
 shutil.copy(src / "vocab.json", out / "phoneme-aligner-vocab.json")
-print("fp32 MB", fp32.stat().st_size // 2**20, "int8 MB", int8.stat().st_size // 2**20)
+print("wrote", int8, "int8 MB", int8.stat().st_size // 2**20)
+print("wrote", out / "phoneme-aligner-vocab.json")
 
 # 정확도 확인: 원본(PyTorch)과 int8 ONNX의 프레임별 최고 음소 일치율
 if len(sys.argv) > 3:

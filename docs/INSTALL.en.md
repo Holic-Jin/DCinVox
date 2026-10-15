@@ -98,29 +98,48 @@ Windows release builds use `.github/workflows/build.yml`. Shipping details: [REL
 
 ## Get the models (required for both)
 
-The app never downloads weights. Put them in `models/` **next to** the executable (or `.app`). Missing models do not crash at launch; they fail later during analysis or alignment.
+The app never downloads weights. Put them in `models/` **next to** the executable (or `.app`). Missing models do not crash at launch, but **Analyze needs all three files**.
+
+On macOS that means the folder that contains `DCinVox.app`, not inside the `.app`.
 
 | File | Rough size | How to get it |
 |---|---|---|
-| `ggml-large-v3-q5_0.bin` | ~1 GB | Download from [ggerganov/whisper.cpp](https://huggingface.co/ggerganov/whisper.cpp) (MIT). **Not in the zip** |
-| `phoneme-aligner-vocab.json` | small | In the release zip under `models/`, or copy from this repo |
-| `phoneme-aligner-int8.onnx` | the rest | Convert the Hugging Face model once (Apache-2.0). **Not in the zip — you convert it** |
+| `ggml-large-v3-q5_0.bin` | ~1 GB | Whisper below. **Not in the zip** |
+| `phoneme-aligner-vocab.json` | small | Already in the release zip under `models/` |
+| `phoneme-aligner-int8.onnx` | ~300 MB | ONNX convert below. **Not in the zip. Not a file you download as `.onnx`** |
 
-Whisper example (repo root or next to the app):
+### Whisper (`ggml-large-v3-q5_0.bin`)
+
+1. Use this **direct file** link (not the web page):  
+   https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
+2. Save it as `models/ggml-large-v3-q5_0.bin` next to the app. The name must match exactly.
+3. Size should be **about 1 GB**. A few MB means the browser saved HTML.
+
+### Phoneme ONNX (`phoneme-aligner-int8.onnx`) — you convert it
+
+There is no `phoneme-aligner-int8.onnx` download on Hugging Face.  
+The source is [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft) (Apache-2.0). `export_aligner.py` in the zip (or `tools/export_aligner.py` in the repo) converts it once. Analyze step 2/3 (alignment) needs this file.
+
+1. Install Python 3.10+.
+2. In a terminal:
 
 ```
-mkdir -p models
-# download in a browser, or:
-# https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
+python3 -m pip install torch transformers onnx onnxruntime numpy huggingface_hub
 ```
 
-Phoneme ONNX (Python, once):
+3. From the unzipped folder (or repo root), write into **models next to the app**:
 
 ```
-python tools/export_aligner.py /path/to/wav2vec2-xlsr-53-espeak-cv-ft models
+# macOS example if the app is ~/DCinVox/DCinVox.app
+python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ~/DCinVox/models
+
+# from the git repo
+python3 tools/export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft models
 ```
 
-Source model: [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft)
+The first argument is the **model id**, not a folder you have to prepare. The script downloads and converts. The first run takes a while.
+
+4. You should then have `models/phoneme-aligner-int8.onnx` (a few hundred MB). Without it, Analyze will not start.
 
 More detail: [models/README.md](../models/README.md).
 
@@ -149,7 +168,9 @@ You want `ffmpeg: … OK`. If Whisper or ONNX are not in place yet, `SELF-CHECK 
 | Symptom | Check |
 |---|---|
 | Icon bounces once then quits / `--self-check` dies immediately | Remove quarantine with `xattr -cr DCinVox.app`. Right-click → Open is often not enough |
-| Missing model | `models/` is **beside** the app, and file names match the table **exactly**. ONNX is not in the zip; convert it with `export_aligner.py` |
+| Missing model | `models/` is in the **same folder** as the `.app` / `exe`. The error lists paths searched. ONNX must be converted with `export_aligner.py` |
+| Whisper is there but it says ggml is missing | File is in `models/` **beside** the `.app`, not inside it; size ~1 GB. On macOS quit, run `xattr -cr`, reopen from the unzipped folder (temporary copies cannot see your models folder) |
+| Error only about ONNX | Expected — it is not in the zip. Run the convert command with output = `models/` next to the app |
 | Video will not open / convert | On Windows, `ffmpeg.exe` is next to `dcinvox.exe`. On macOS, keep the `.app` intact |
 | macOS will not open the app | Remove quarantine (`xattr -cr`). This build has no Developer ID signature |
 | First launch is slow | Normal — it is reading a large model from disk |
