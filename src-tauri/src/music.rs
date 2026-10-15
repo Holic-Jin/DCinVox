@@ -521,7 +521,17 @@ pub fn original_syllables(
     lyrics_hint: Option<&str>,
     cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<Vec<OrigSyllable>, String> {
-    let lang = lyrics_hint.and_then(|l| l.chars().any(crate::g2p::ko::is_hangul).then_some("ko"));
+    let lang = lyrics_hint.and_then(|l| {
+        if l.chars().any(crate::g2p::ko::is_hangul) {
+            Some("ko")
+        } else if l.chars().any(crate::g2p::ja::is_kana) {
+            Some("ja")
+        } else if l.chars().any(|c| c.is_ascii_alphabetic()) {
+            Some("en")
+        } else {
+            None
+        }
+    });
     let t = recognizer.transcribe_hinted(mono16, lang, lyrics_hint, |_| {}, cancel)?;
     if std::env::var("DCINVOX_DEBUG_LYRICS").is_ok() {
         eprintln!("[원곡 가사 {}] {}", t.lang, t.segments.iter().map(|s| s.text.as_str()).collect::<Vec<_>>().join(" / "));

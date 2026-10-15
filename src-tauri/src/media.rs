@@ -77,6 +77,23 @@ pub fn extract_wav(input: &Path, output: &Path, sample_rate: u32) -> Result<(), 
     extract_wav_ch(input, output, sample_rate, 1)
 }
 
+/// 말소리용: 스테레오는 가운데(보컬)만 남기고, 말소리 대역만 통과. 신경망 분리 모델은 쓰지 않는다.
+pub fn extract_speech_wav(input: &Path, output: &Path, sample_rate: u32) -> Result<(), String> {
+    let af = "aformat=channel_layouts=stereo,highpass=f=80,lowpass=f=8000,pan=mono|c0=0.5*c0+0.5*c1";
+    let out = ffmpeg()
+        .arg("-y")
+        .arg("-i")
+        .arg(input)
+        .args(["-vn", "-af", af, "-ac", "1", "-ar", &sample_rate.to_string(), "-c:a", "pcm_s16le"])
+        .arg(output)
+        .output()
+        .map_err(|e| tr!("ffmpeg_run_failed", e))?;
+    if out.status.success() {
+        return Ok(());
+    }
+    extract_wav(input, output, sample_rate)
+}
+
 /// 채널 수를 지정해 16bit WAV 추출 (반주는 스테레오 유지)
 pub fn extract_wav_ch(input: &Path, output: &Path, sample_rate: u32, channels: u32) -> Result<(), String> {
     let out = ffmpeg()
@@ -140,5 +157,28 @@ mod tests {
         assert_eq!(parse_timestamp("00:01:02.50"), Some(62.5));
         assert_eq!(parse_timestamp("01:00:00.00"), Some(3600.0));
         assert_eq!(parse_timestamp("N/A"), None);
+    }
+
+    #[test]
+    fn speech_extract_writes_mono_wav() {
+        let dir = std::env::temp_dir().join(format!("dcinvox-speech-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&dir);
+        let src = dir.join("in.wav");
+        let dst = dir.join("out.wav");
+        let ok = ffmpeg()
+            .args(["-loglevel", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=440:duration=1", "-ac", "2"])
+            .arg(&src)
+            .status()
+            .map(|s| s.success())
+            .unwrap_or(false);
+        if !ok {
+            eprintln!("ffmpeg 없음 — 테스트 건너뜀");
+            return;
+        }
+        extract_speech_wav(&src, &dst, 16000).unwrap();
+        let r = hound::WavReader::open(&dst).unwrap();
+        assert_eq!(r.spec().channels, 1);
+        assert_eq!(r.spec().sample_rate, 16000);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

@@ -1,5 +1,4 @@
-//! 분석 단계: 영상 1개 = 16kHz 변환 → 음성 인식 → 색인 저장 → 음소 정렬.
-//! (보컬 분리는 이후 마일스톤에서 이 파이프라인에 끼워 넣는다)
+//! 분석 단계: 영상 1개 = 16kHz 변환(보컬/말소리 대역) → 음성 인식 → 색인 저장 → 음소 정렬.
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -21,7 +20,7 @@ pub fn analyze_asset(
 ) -> Result<usize, String> {
     let wav16 = stt_wav(root, asset_id);
     if !wav16.is_file() {
-        media::extract_wav(&project::cache_wav(root, asset_id), &wav16, stt::SAMPLE_RATE)?;
+        media::extract_speech_wav(&project::cache_wav(root, asset_id), &wav16, stt::SAMPLE_RATE)?;
     }
     let pcm = stt::read_wav(&wav16)?;
     let transcript = recognizer.transcribe(&pcm, None, on_progress, cancel)?;
@@ -41,7 +40,7 @@ pub fn align_asset(
 ) -> Result<usize, String> {
     let wav16 = stt_wav(root, asset_id);
     if !wav16.is_file() {
-        media::extract_wav(&project::cache_wav(root, asset_id), &wav16, stt::SAMPLE_RATE)?;
+        media::extract_speech_wav(&project::cache_wav(root, asset_id), &wav16, stt::SAMPLE_RATE)?;
     }
     let pcm = stt::read_wav(&wav16)?;
     let mut conn = index::open(root)?;

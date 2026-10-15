@@ -56,11 +56,11 @@ App source: [`LICENSE`](LICENSE) (view and personal builds). Bundled open-source
 
 - [x] Milestone 1: create/open a project, import video (copy into Assets + extract 48 kHz WAV), playback, step buttons, copyright notice
 - [x] Milestone 2a: Whisper large-v3 STT + word timestamps (DTW) + SQLite index, progress, cancel, per-video checkpoints
-- [ ] Milestone 2b: vocal isolation (remove backing)
+- [x] Milestone 2b: vocal isolation (remove backing) — stereo center (vocal) extract + speech-band filter at import/analyze; no extra neural model
 - [x] Milestone 3: Korean standard pronunciation, lyric matching (phrase > word > syllable > similar sound), silence trim and loudness match, preview render (clip cache), swap candidates
 - [x] Milestone 4a: Korean phoneme forced alignment (wav2vec2 phoneme model, statically linked ONNX int8) → syllable and vowel bounds; prefer aligned candidates; penalize very short syllables
 - [x] Milestone 4+: intelligibility — re-check candidates (cut and listen again, precomputed at analysis), bonus for position inside the word, 40 ms gap between words. Measured (`bench.rs`, Whisper re-recognition CER): 51.3% → 23.7%
-- [ ] Milestone 4b: Japanese and English phoneme alignment
+- [x] Milestone 4b: Japanese and English phoneme alignment — kana morae / English syllables → same wav2vec2 espeak aligner; kanji-only words are skipped
 - [x] Milestone 5: pitch-block editor (do-re-mi snap in key, drag / ↑↓, length, tempo, key, presets, undo, playhead), WORLD conversion — default engine is the “smooth vocoder” chosen by listening (keeps micro-tremor, frame interpolation, original consonants); Advanced can pick mechanical / PSOLA (voiced frames only to target pitch, stretch vowels only, vowel onset on the beat, per-speaker octave), stretched video
 - [x] Milestone 6: import backing track — auto detect tempo, downbeat, key (minor mapped to relative major do-re-mi), nudge start by beats, backing level, stereo mix / import MIDI melody (busiest track, top note of chords, rests) and export with lyrics / export: MP4 1280×720, WAV (with backing or voice only), MIDI
 - [x] Follow the original: pitch follows only after robot autotune is on (until then, the source pitch). Finds the original singer’s syllable times and pitches (Whisper + phoneme align, once per backing) and lays your lyric syllables in order from the start — independent of lyric text; long intros start one bar before. Measured (`melody_eval.rs`): pitch match 21.5% → 72.7%, onset error 4 s → 0 ms / backing ends with the song / insert rests / resize regions

@@ -150,7 +150,7 @@ pub fn import_video(root: &Path, project: &mut Project, source: &Path) -> Result
     }
 
     let id = next_id(project);
-    if let Err(e) = media::extract_wav(&dest, &cache_wav(root, &id), OUTPUT_SAMPLE_RATE) {
+    if let Err(e) = media::extract_speech_wav(&dest, &cache_wav(root, &id), OUTPUT_SAMPLE_RATE) {
         if !already_inside {
             let _ = fs::remove_file(&dest);
         }

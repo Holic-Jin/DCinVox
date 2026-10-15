@@ -166,6 +166,9 @@ pub fn store_alignment(conn: &mut Connection, words: &[crate::align::WordOut]) -
             .map_err(db_err)?;
         let mut up = tx.prepare("UPDATE tokens SET start = ?1, end = ?2, aligned = 1 WHERE id = ?3").map_err(db_err)?;
         for w in words {
+            if w.syllables.is_empty() {
+                continue;
+            }
             del.execute([w.token_id]).map_err(db_err)?;
             for (i, s) in w.syllables.iter().enumerate() {
                 ins.execute(params![w.token_id, i as i64, s.unit, s.start, s.end, s.v_start, s.v_end]).map_err(db_err)?;

@@ -143,18 +143,28 @@ impl Aligner {
         Ok(out)
     }
 
-    /// 단어들 → 음소 열 + 후보 집합 목록. 한국어가 아닌 단어가 있으면 None (마일스톤 4b에서 ja/en 추가)
+    /// 단어들 → 음소 열 + 후보 집합 목록. 한자만 있는 일본어 등 못 바꾸는 단어는 건너뛴다.
     fn phones(&self, words: &[WordIn]) -> Option<(Vec<PhoneRef>, Vec<Vec<usize>>)> {
         let mut classes: Vec<Vec<usize>> = Vec::new();
         let mut out = Vec::new();
         for (wi, w) in words.iter().enumerate() {
-            for (si, ch) in w.pron.chars().enumerate() {
-                let (onset, vowel, coda) = g2p::ko::phones(ch)?;
+            let units = g2p::units(&w.pron);
+            if units.is_empty() {
+                continue;
+            }
+            let mut local = Vec::new();
+            let mut ok = true;
+            'word: for (si, unit) in units.iter().enumerate() {
+                let Some((onset, vowel, coda)) = g2p::phones_unit(unit) else {
+                    ok = false;
+                    break;
+                };
                 for (list, is_vowel) in [(onset, false), (vowel, true), (coda, false)] {
                     for alts in list {
                         let ids: Vec<usize> = alts.iter().filter_map(|p| self.vocab.get(*p).copied()).collect();
                         if ids.is_empty() {
-                            return None;
+                            ok = false;
+                            break 'word;
                         }
                         let class = match classes.iter().position(|c| *c == ids) {
                             Some(k) => k + 1,
@@ -163,10 +173,16 @@ impl Aligner {
                                 classes.len()
                             }
                         };
-                        out.push(PhoneRef { class, word: wi, syl: si, is_vowel });
+                        local.push(PhoneRef { class, word: wi, syl: si, is_vowel });
                     }
                 }
             }
+            if ok {
+                out.extend(local);
+            }
+        }
+        if out.is_empty() {
+            return None;
         }
         Some((out, classes))
     }
@@ -296,7 +312,7 @@ fn collect(words: &[WordIn], phones: &[PhoneRef], spans: &[(usize, usize)], fram
         .max(start_f + 1);
         let coda = (first..=last).find(|&i| i > *vowel.last().unwrap_or(&first) && !phones[i].is_vowel);
         let v_end = coda.map_or(end_f, |i| spans[i].0).max(v_start + 1).min(end_f.max(v_start + 1));
-        let unit = words[wi].pron.chars().nth(si).map(String::from).unwrap_or_default();
+        let unit = g2p::units(&words[wi].pron).get(si).cloned().unwrap_or_default();
         out[wi].syllables.push(SyllableOut { unit, start: t(start_f), end: t(end_f), v_start: t(v_start), v_end: t(v_end) });
     }
     for w in &mut out {

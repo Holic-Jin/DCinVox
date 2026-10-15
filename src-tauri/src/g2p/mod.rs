@@ -1,34 +1,75 @@
-//! 표기 → 발음형, 발음형 → 음절 단위.
-//! 한국어는 표준발음 규칙(ko.rs). 일본어(가나 읽기)·영어(CMUdict)는 마일스톤 4에서 추가 — 그전까지는 정규화 문자열 그대로.
+//! 표기 → 발음형, 발음형 → 음절 단위, 음절 → 정렬 음소.
+//! 한국어 표준발음(ko), 일본어 가나(ja), 영어 음절 규칙(en).
 
+pub mod en;
+pub mod ja;
 pub mod ko;
 
 use crate::index::normalize;
 
-/// 매칭용 발음형. 언어와 무관하게 한글 어절에는 한국어 규칙을 적용한다.
+pub use ko::Phone;
+
+/// 매칭용 발음형. 한글은 표준발음, 가나는 히라가나, 그 외는 정규화 문자열.
 pub fn pron(text: &str) -> String {
-    ko::pronounce(&normalize(text))
+    let n = normalize(text);
+    if n.chars().any(ko::is_hangul) {
+        return ko::pronounce(&n);
+    }
+    if n.chars().any(ja::is_kana) {
+        return ja::to_hiragana(&n);
+    }
+    n
 }
 
-/// 발음형을 잘라 붙일 수 있는 최소 단위로 나눈다.
-/// 한글 = 음절 1글자, 가나·한자 = 1글자, 로마자·숫자 = 연속된 덩어리 하나(영어 음절 분리는 마일스톤 4).
+/// 잘라 붙일 최소 단위: 한글 1글자, 일본어 모라, 영어 음절, 숫자 덩어리.
 pub fn units(pron: &str) -> Vec<String> {
-    let mut out: Vec<String> = Vec::new();
-    let mut run = String::new();
-    for c in pron.chars() {
-        if c.is_ascii_alphanumeric() || (c.is_alphabetic() && (c as u32) < 0x0250) {
-            run.push(c);
-            continue;
+    let chars: Vec<char> = pron.chars().collect();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        if ko::is_hangul(c) {
+            out.push(c.to_string());
+            i += 1;
+        } else if ja::is_kana(c) {
+            let start = i;
+            while i < chars.len() && ja::is_kana(chars[i]) {
+                i += 1;
+            }
+            out.extend(ja::morae(&chars[start..i].iter().collect::<String>()));
+        } else if c.is_ascii_alphabetic() {
+            let start = i;
+            while i < chars.len() && chars[i].is_ascii_alphabetic() {
+                i += 1;
+            }
+            out.extend(en::syllables(&chars[start..i].iter().collect::<String>()));
+        } else if c.is_ascii_digit() {
+            let start = i;
+            while i < chars.len() && chars[i].is_ascii_digit() {
+                i += 1;
+            }
+            out.push(chars[start..i].iter().collect());
+        } else {
+            i += 1;
         }
-        if !run.is_empty() {
-            out.push(std::mem::take(&mut run));
-        }
-        out.push(c.to_string());
-    }
-    if !run.is_empty() {
-        out.push(run);
     }
     out
+}
+
+/// 단위 하나 → (초성, 중성, 종성) 음소 후보. 못 바꾸면 None (한자만 있는 일본어 등).
+pub fn phones_unit(unit: &str) -> Option<(Vec<Phone>, Vec<Phone>, Vec<Phone>)> {
+    let mut it = unit.chars();
+    let Some(c) = it.next() else { return None };
+    if ko::is_hangul(c) && it.next().is_none() {
+        return ko::phones(c);
+    }
+    if unit.chars().all(ja::is_kana) {
+        return ja::phones(unit);
+    }
+    if unit.chars().all(|ch| ch.is_ascii_alphabetic()) {
+        return en::phones(unit);
+    }
+    None
 }
 
 #[cfg(test)]
@@ -38,7 +79,15 @@ mod tests {
     #[test]
     fn splits_units() {
         assert_eq!(units("사랑해"), ["사", "랑", "해"]);
-        assert_eq!(units("loveこころ"), ["love", "こ", "こ", "ろ"]);
+        assert_eq!(units("loveこころ"), ["lov", "e", "こ", "こ", "ろ"]);
+        assert_eq!(units("hello"), ["hel", "lo"]);
+        assert_eq!(units("きゃく"), ["きゃ", "く"]);
         assert_eq!(pron("같이!"), "가치");
+        assert_eq!(pron("コンニチハ"), "こんにちは");
+        assert_eq!(pron("Hello"), "hello");
+        assert!(phones_unit("사").is_some());
+        assert!(phones_unit("こ").is_some());
+        assert!(phones_unit("hel").is_some());
+        assert!(phones_unit("漢").is_none());
     }
 }
