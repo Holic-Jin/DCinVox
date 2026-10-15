@@ -19,7 +19,7 @@ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
 `phoneme-aligner-int8.onnx` は**配布ファイルではありません。** zip にも無く、アプリも取得しません。[facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft) を一度変換します。
 
 ```
-python3 -m pip install -r tools/aligner-requirements.txt
+python3 -m pip install -r requirements.txt
 python3 tools/export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft models
 ```
 

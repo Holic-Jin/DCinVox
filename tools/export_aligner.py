@@ -14,7 +14,7 @@ from pathlib import Path
 USAGE = """사용: python3 export_aligner.py <HF모델ID 또는 폴더> <출력 models 폴더> [확인용 16kHz mono wav]
 
 예 (배포 zip을 푼 폴더에서, 앱 옆 models 로 출력):
-  python3 -m pip install -r aligner-requirements.txt
+  python3 -m pip install -r requirements.txt
   python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ./models
 
 phoneme-aligner-int8.onnx 는 zip에 없다. Hugging Face에서 .onnx 를 받는 것이 아니라
@@ -27,8 +27,8 @@ PIP_PACKAGES = "numpy torch transformers onnx onnxruntime huggingface_hub"
 def die_missing_python_packages(err: ModuleNotFoundError) -> None:
     py = sys.executable
     here = Path(__file__).resolve().parent
-    req = here / "aligner-requirements.txt"
-    install = f'"{py}" -m pip install -r "{req}"' if req.is_file() else f'"{py}" -m pip install {PIP_PACKAGES}'
+    req = next((p for p in (here / "requirements.txt", here / "aligner-requirements.txt") if p.is_file()), None)
+    install = f'"{py}" -m pip install -r "{req}"' if req else f'"{py}" -m pip install {PIP_PACKAGES}'
     sys.stderr.write(
         f"{err.name} 패키지가 없습니다. (실행 중인 Python: {py})\n"
         f"export_aligner.py 는 앱 zip에 들어 있지만, numpy/torch 는 들어 있지 않습니다.\n"

@@ -124,8 +124,7 @@ Hugging Face에 이 이름 그대로 올라온 `.onnx`는 없습니다.
 2. 터미널:
 
 ```
-python3 -m pip install -r aligner-requirements.txt
-# 저장소에서: python3 -m pip install -r tools/aligner-requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 3. zip을 푼 폴더(또는 저장소 루트)에서, **출력 경로를 앱 옆 models 로** 지정합니다:

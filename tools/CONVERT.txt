@@ -10,7 +10,7 @@ This zip does NOT include AI weights. Hugging Face downloads:
   2) phoneme-aligner-int8.onnx  (not a file you download)
      Convert once with export_aligner.py (this folder):
 
-        python3 -m pip install -r aligner-requirements.txt
+        python3 -m pip install -r requirements.txt
         python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ./models
 
 numpy/torch are NOT inside the zip. Install them with the same python3
@@ -18,5 +18,5 @@ that you use to run the script. Then put the .onnx in models/ next to
 DCinVox.app / dcinvox.exe.
 
 한국어: numpy 없음 오류는 패키지를 안 넣어서입니다.
-  python3 -m pip install -r aligner-requirements.txt
+  python3 -m pip install -r requirements.txt
 그다음 위 export_aligner.py 명령을 zip 푼 폴더에서 실행하세요.
