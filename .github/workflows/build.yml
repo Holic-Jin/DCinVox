@@ -58,6 +58,7 @@ jobs:
           cp tools/export_aligner.py tools/CONVERT.txt dist/
           cp requirements.txt dist/requirements.txt
           cp requirements.txt dist/aligner-requirements.txt
+          cp docs/INSTALL.md docs/INSTALL.en.md docs/INSTALL.ja.md dist/
       # 실행 점검: DLL이 다 로드되고 동봉 ffmpeg가 도는지 (큰 모델은 저장소에 없어서 Whisper·ONNX는 실패가 정상)
       - name: Smoke test (--self-check)
         shell: bash

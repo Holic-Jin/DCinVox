@@ -4,6 +4,8 @@
 
 Weights are too large for GitHub (about 1.3 GB). Put them in `models/` **in the same folder as the app** (beside `DCinVox.app`, not inside it).
 
+For the release zip, follow the copy-paste steps in [docs/INSTALL.en.md](../docs/INSTALL.en.md).
+
 Analyze needs all three files.
 
 ## Whisper large-v3 (MIT) — `ggml-large-v3-q5_0.bin` (~1 GB)

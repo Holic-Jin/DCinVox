@@ -29,6 +29,9 @@ cp -f "$ROOT/tools/export_aligner.py" "$DIST/"
 cp -f "$ROOT/requirements.txt" "$DIST/requirements.txt"
 cp -f "$ROOT/requirements.txt" "$DIST/aligner-requirements.txt"
 cp -f "$ROOT/tools/CONVERT.txt" "$DIST/"
+cp -f "$ROOT/docs/INSTALL.md" "$DIST/INSTALL.md"
+cp -f "$ROOT/docs/INSTALL.en.md" "$DIST/INSTALL.en.md"
+cp -f "$ROOT/docs/INSTALL.ja.md" "$DIST/INSTALL.ja.md"
 
 # Mach-O adhoc만 있으면 CodeResources가 없어 검증이 실패한다. 번들 단위로 다시 서명.
 codesign --force --deep --sign - "$APP"

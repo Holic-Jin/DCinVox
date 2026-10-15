@@ -4,6 +4,8 @@
 
 重みは GitHub には大きすぎます（約 1.3 GB）。アプリ（`DCinVox.app`）と**同じフォルダ**の `models/` に置いてください。`.app` の中ではありません。
 
+配布 zip は [docs/INSTALL.ja.md](../docs/INSTALL.ja.md) の手順をそのまま実行してください。
+
 解析には次の3つがすべて必要です。
 
 ## Whisper large-v3 (MIT) — `ggml-large-v3-q5_0.bin`（約 1 GB）

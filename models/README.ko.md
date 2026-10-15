@@ -4,6 +4,8 @@
 
 가중치는 GitHub에 올리기엔 너무 큽니다(약 1.3 GB). **앱(또는 `DCinVox.app`)과 같은 폴더**의 `models/`에 두세요. `.app` 속이 아닙니다.
 
+배포 zip을 쓰는 분은 명령어를 한 줄씩 따라 하면 됩니다: [docs/INSTALL.md](../docs/INSTALL.md)
+
 분석에는 아래 3개가 모두 필요합니다.
 
 ## Whisper large-v3 (MIT) — `ggml-large-v3-q5_0.bin` (~1 GB)
