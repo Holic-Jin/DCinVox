@@ -14,12 +14,31 @@ from pathlib import Path
 USAGE = """사용: python3 export_aligner.py <HF모델ID 또는 폴더> <출력 models 폴더> [확인용 16kHz mono wav]
 
 예 (배포 zip을 푼 폴더에서, 앱 옆 models 로 출력):
-  python3 -m pip install torch transformers onnx onnxruntime numpy huggingface_hub
+  python3 -m pip install -r aligner-requirements.txt
   python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ./models
 
 phoneme-aligner-int8.onnx 는 zip에 없다. Hugging Face에서 .onnx 를 받는 것이 아니라
 facebook/wav2vec2-xlsr-53-espeak-cv-ft 를 받아 여기서 변환한다.
 """
+
+PIP_PACKAGES = "numpy torch transformers onnx onnxruntime huggingface_hub"
+
+
+def die_missing_python_packages(err: ModuleNotFoundError) -> None:
+    py = sys.executable
+    here = Path(__file__).resolve().parent
+    req = here / "aligner-requirements.txt"
+    install = f'"{py}" -m pip install -r "{req}"' if req.is_file() else f'"{py}" -m pip install {PIP_PACKAGES}'
+    sys.stderr.write(
+        f"{err.name} 패키지가 없습니다. (실행 중인 Python: {py})\n"
+        f"export_aligner.py 는 앱 zip에 들어 있지만, numpy/torch 는 들어 있지 않습니다.\n"
+        f"아래를 **방금 그 python3와 같은 것**으로 실행한 뒤 다시 시도하세요:\n"
+        f"  {install}\n"
+        f"  또는: \"{py}\" -m pip install {PIP_PACKAGES}\n"
+        f"pip 자체가 없으면: \"{py}\" -m ensurepip --upgrade\n"
+    )
+    sys.exit(1)
+
 
 if len(sys.argv) < 3:
     sys.stderr.write(USAGE)
@@ -28,18 +47,24 @@ if len(sys.argv) < 3:
 import json
 import wave
 
-import numpy as np
-import onnxruntime as ort
-import torch
-from onnxruntime.quantization import QuantType, quantize_dynamic
-from transformers import Wav2Vec2ForCTC
+try:
+    import numpy as np
+    import onnxruntime as ort
+    import torch
+    from onnxruntime.quantization import QuantType, quantize_dynamic
+    from transformers import Wav2Vec2ForCTC
+except ModuleNotFoundError as e:
+    die_missing_python_packages(e)
 
 
 def resolve_src(arg: str) -> Path:
     p = Path(arg)
     if p.is_dir() and (p / "config.json").is_file():
         return p
-    from huggingface_hub import snapshot_download
+    try:
+        from huggingface_hub import snapshot_download
+    except ModuleNotFoundError as e:
+        die_missing_python_packages(e)
 
     print("downloading", arg)
     return Path(snapshot_download(arg))

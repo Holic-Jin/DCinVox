@@ -124,7 +124,8 @@ The source is [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/fa
 2. In a terminal:
 
 ```
-python3 -m pip install torch transformers onnx onnxruntime numpy huggingface_hub
+python3 -m pip install -r aligner-requirements.txt
+# from the repo: python3 -m pip install -r tools/aligner-requirements.txt
 ```
 
 3. From the unzipped folder (or repo root), write into **models next to the app**:

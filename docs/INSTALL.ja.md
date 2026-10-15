@@ -124,7 +124,8 @@ Hugging Face にこの名前の `.onnx` はありません。
 2. ターミナル:
 
 ```
-python3 -m pip install torch transformers onnx onnxruntime numpy huggingface_hub
+python3 -m pip install -r aligner-requirements.txt
+# リポジトリでは: python3 -m pip install -r tools/aligner-requirements.txt
 ```
 
 3. zip を展開したフォルダ（またはリポジトリ直下）で、**出力をアプリ横の models に**します:

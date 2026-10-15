@@ -19,7 +19,7 @@ https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
 `phoneme-aligner-int8.onnx`는 **다운로드 파일이 아닙니다.** zip에도 없고, 앱이 받아 오지도 않습니다. Hugging Face의 [facebook/wav2vec2-xlsr-53-espeak-cv-ft](https://huggingface.co/facebook/wav2vec2-xlsr-53-espeak-cv-ft)를 한 번 변환합니다.
 
 ```
-python3 -m pip install torch transformers onnx onnxruntime numpy huggingface_hub
+python3 -m pip install -r tools/aligner-requirements.txt
 python3 tools/export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft models
 ```
 
