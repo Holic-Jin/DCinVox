@@ -19,10 +19,6 @@ src-tauri/binaries/
 src-tauri/target/
 src-tauri/gen/
 
-# SteamPipe local upload folders (SDK itself must never be committed)
-steam/content/
-steam/output/
-
 # Secrets
 .env
 .env.*

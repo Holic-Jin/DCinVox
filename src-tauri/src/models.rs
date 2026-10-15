@@ -12,7 +12,7 @@ fn search_dirs() -> Vec<PathBuf> {
             dirs.push(dir.join("models"));
             // macOS .app 안: Contents/MacOS/../Resources/models
             dirs.push(dir.join("../Resources/models"));
-            // Steam 배포(macOS): DCinVox.app 옆 models/ — 서명된 .app을 건드리지 않고 모델을 따로 둠
+            // GitHub 배포(macOS): DCinVox.app 옆 models/ — 서명된 .app을 건드리지 않고 모델을 따로 둠
             dirs.push(dir.join("../../../models"));
         }
     }

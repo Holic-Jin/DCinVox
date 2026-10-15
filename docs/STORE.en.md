@@ -2,7 +2,7 @@
 
 [한국어](STORE.md) · [English](STORE.en.md) · [日本語](STORE.ja.md)
 
-GitHub is the current distribution path. This text was drafted for Steam and can be reused on a project page.
+GitHub is the current distribution path. This text can be reused on a project page.
 
 ## Short description (under 300 characters)
 
@@ -23,7 +23,7 @@ Cut real speech from your videos into syllables, stitch them into your own lyric
 
 **Notice:** The program includes no video or audio. You are responsible for rights in imported material and in your results. The sound is intentionally “stitched”; this is not a natural singing synthesizer.
 
-## Steam AI content disclosure (Content Survey → AI Generated Content) draft
+## AI content disclosure (draft)
 
 **Live-Generated Content:**
 

@@ -2,7 +2,7 @@
 
 [한국어](RELEASE.md) · [English](RELEASE.en.md) · [日本語](RELEASE.ja.md)
 
-Distribution is GitHub. Steam copy and SteamPipe drafts remain in `docs/STORE.md` and `steam/` but are unused.
+Distribution is GitHub.
 
 ## A. Accounts
 

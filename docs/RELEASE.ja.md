@@ -2,7 +2,7 @@
 
 [한국어](RELEASE.md) · [English](RELEASE.en.md) · [日本語](RELEASE.ja.md)
 
-配布経路は GitHub です。Steam 用の文言と SteamPipe の下書きは `docs/STORE.md` と `steam/` に残っていますが、現在は使いません。
+配布経路は GitHub です。
 
 ## A. アカウント
 
