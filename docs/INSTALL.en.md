@@ -26,7 +26,7 @@ These commands assume the unzipped folder is `DCinVox-macos-arm64` in Downloads.
 
 ### 1. Get the app
 
-1. Download the **latest** `DCinVox-macos-arm64.zip` from [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases) (1.0.2 or newer).
+1. Download the **latest** `DCinVox-macos-arm64.zip` from [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases) (1.1.0 or newer).
 2. Unzip and keep **the whole folder**. Do not move only `DCinVox.app`.
 3. You should see `DCinVox.app`, `models/`, and `export_aligner.py`. If `export_aligner.py` is missing, you have 1.0.1 or older — download the latest zip.
 

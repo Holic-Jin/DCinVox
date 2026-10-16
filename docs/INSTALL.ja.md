@@ -26,7 +26,7 @@ zip に**大きな AI ファイルは入っていません。** ブラウザで1
 
 ### 1. アプリを入手
 
-1. [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases) から**最新**の `DCinVox-macos-arm64.zip` をダウンロード（1.0.2 以降）。
+1. [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases) から**最新**の `DCinVox-macos-arm64.zip` をダウンロード（1.1.0 以降）。
 2. 展開し、**フォルダごと**置きます。`DCinVox.app` だけ移さないでください。
 3. `DCinVox.app`、`models/`、`export_aligner.py` が見えます。`export_aligner.py` が無ければ 1.0.1 以前です。最新 zip を取り直してください。
 

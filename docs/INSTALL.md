@@ -26,7 +26,7 @@ Finder에서 연 폴더 이름이 `DCinVox-macos-arm64` 이고 `다운로드`에
 
 ### 1. 앱 받기
 
-1. [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases)에서 **최신** `DCinVox-macos-arm64.zip`을 받습니다. (1.0.2 이상)
+1. [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases)에서 **최신** `DCinVox-macos-arm64.zip`을 받습니다. (1.1.0 이상)
 2. 압축을 풉니다. **폴더 통째로** 둡니다. `DCinVox.app`만 다른 곳으로 옮기지 마세요.
 3. 폴더 안에 `DCinVox.app`, `models/`, `export_aligner.py`가 보여야 합니다. `export_aligner.py`가 없으면 1.0.1 이하입니다. 최신 zip을 다시 받으세요.
 
