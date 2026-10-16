@@ -19,6 +19,10 @@ src-tauri/binaries/
 src-tauri/target/
 src-tauri/gen/
 
+# Python
+**/__pycache__/
+*.pyc
+
 # Secrets
 .env
 .env.*

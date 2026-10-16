@@ -1,0 +1,43 @@
+DCinVox — 모델 변환 (비전문가용)
+================================
+
+자세한 순서: 같은 zip 안의 INSTALL.md
+또는 https://github.com/Holic-Jin/DCinVox/blob/main/docs/INSTALL.md
+
+zip 에는 큰 AI 파일이 없습니다.
+1) Whisper 는 브라우저로 받기
+   https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
+   → models/ggml-large-v3-q5_0.bin  (약 1GB)
+2) phoneme-aligner-int8.onnx 는 받는 파일이 아님. 아래처럼 한 번 변환.
+
+Python 은 3.12 또는 3.13.  3.15 는 안 됩니다 (torch 미지원).
+Homebrew 에 바로 pip 하지 마세요. 예시 글자 xyz / path/to/venv 는 복사하지 마세요.
+pipx 로 torch 를 넣지 마세요.
+
+macOS (압축 푼 이 폴더에서):
+
+  brew install python@3.13
+  python3.13 -m venv .venv
+  source .venv/bin/activate
+  python3 -m pip install -r aligner-requirements.txt
+  python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ./models
+
+Windows (명령 프롬프트 cmd. PowerShell 말고):
+
+  python.org 에서 3.13 64-bit 설치. Add python.exe to PATH 켜기. 3.14/3.15 와 Store Python 은 안 됨.
+  설치 후 명령 프롬프트를 새로 열고:
+
+  cd %USERPROFILE%\Downloads\DCinVox-windows-x64
+  py -3.13 --version
+  py -3.13 -m venv .venv
+  .venv\Scripts\activate.bat
+  python -m pip install -r aligner-requirements.txt
+  python export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft .\models
+
+  SmartScreen: 추가 정보 → 실행. ffmpeg.exe 는 dcinvox.exe 와 같은 폴더.
+  창이 하얗면 WebView2 Evergreen x64.
+
+aligner-requirements.txt 가 없고 requirements.txt 만 있으면 그 이름을 쓰세요.
+
+macOS 앱이 바로 꺼지면, 앱을 열기 전에:
+  xattr -cr DCinVox.app
