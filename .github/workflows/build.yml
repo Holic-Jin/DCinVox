@@ -137,6 +137,9 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --title "DCinVox $TAG" \
+              --notes-file docs/GITHUB_RELEASE.md
             gh release upload "$TAG" \
               DCinVox-windows-x64.zip \
               DCinVox-macos-arm64.zip \
