@@ -22,12 +22,20 @@ macOS (압축 푼 이 폴더에서):
   python3 -m pip install -r aligner-requirements.txt
   python3 export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft ./models
 
-Windows:
+Windows (명령 프롬프트 cmd. PowerShell 말고):
 
+  python.org 에서 3.13 64-bit 설치. Add python.exe to PATH 켜기. 3.14/3.15 와 Store Python 은 안 됨.
+  설치 후 명령 프롬프트를 새로 열고:
+
+  cd %USERPROFILE%\Downloads\DCinVox-windows-x64
+  py -3.13 --version
   py -3.13 -m venv .venv
-  .venv\Scripts\activate
+  .venv\Scripts\activate.bat
   python -m pip install -r aligner-requirements.txt
   python export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft .\models
+
+  SmartScreen: 추가 정보 → 실행. ffmpeg.exe 는 dcinvox.exe 와 같은 폴더.
+  창이 하얗면 WebView2 Evergreen x64.
 
 aligner-requirements.txt 가 없고 requirements.txt 만 있으면 그 이름을 쓰세요.
 

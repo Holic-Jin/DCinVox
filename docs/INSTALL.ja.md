@@ -100,37 +100,102 @@ Finder で `DCinVox.app` を開きます。解析には `models/` に次の3つ�
 
 ---
 
-## Windows — この順で
+## Windows — この順で（初めてでも）
+
+Python を使ったことがない人向けです。**コマンドプロンプト** (`cmd`) を使ってください。PowerShell は実行ポリシーで `Activate.ps1` が止まりやすいので、ここでは使いません。
+
+展開フォルダがダウンロードの `DCinVox-windows-x64` である前提です。場所が違えば `cd` だけ変えてください。
 
 ### 1. アプリを入手
 
-1. [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases) から `DCinVox-windows-x64.zip` をダウンロード。
-2. 展開しフォルダごと置きます。`ffmpeg.exe` は `dcinvox.exe` の隣のまま。
-3. SmartScreen は **詳細情報 → 実行**。
+1. [GitHub Releases](https://github.com/Holic-Jin/DCinVox/releases) から**最新**の `DCinVox-windows-x64.zip` をダウンロード（1.1.0 以降）。
+2. 展開し、**フォルダごと**置きます。`dcinvox.exe` だけデスクトップへ移さないでください。`ffmpeg.exe` が隣に無いと動画が開きません。
+3. `dcinvox.exe`、`ffmpeg.exe`、`models\`、`export_aligner.py` が見えます。`export_aligner.py` が無ければ 1.0.1 以前です。最新 zip を取り直してください。
 
-### 2. Whisper
+### 2. Windows に止められたとき（SmartScreen）
 
-macOS の 3 と同じ。`models\ggml-large-v3-q5_0.bin`（約 1GB）。
+**Windows によって PC が保護されました** はウイルスではありません。署名の無いビルドだからです。
 
-### 3. ONNX 変換
+1. **詳細情報**（More info）を押します。
+2. **実行**（Run anyway）を押します。
 
-[python.org](https://www.python.org/downloads/) から **Python 3.13**（**3.15 は不可**）。**Add python.exe to PATH** をオン。
+白い画面だけなら手順 6 の WebView2 を見てください。解析はモデル3つを入れてからです。
+
+### 3. Whisper ファイルを入れる（約 1GB）
+
+解析に必要です。zip にはありません。
+
+1. この URL をブラウザに貼ります。ページではなく**ファイル**が保存されるはずです。  
+   https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-q5_0.bin
+2. `dcinvox.exe` と**同じフォルダ**の `models` へ移します。
+3. 名前は必ず `ggml-large-v3-q5_0.bin` です。
+4. 大きさは**約 1GB**です。数MBなら HTML を保存しています。やり直してください。
+
+### 4. Python 3.13 を入れる（一度だけ）
+
+`phoneme-aligner-int8.onnx` は Hugging Face からこの名前で落とすファイルでは**ありません。** zip の `export_aligner.py` が一度変換します。
+
+**Python 3.12 または 3.13** が必要です。**3.14・3.15 は不可**です。Microsoft Store の「Python」ボタンは使わないでください。`python` と打つと Store が開くときは下の表の “Python was not found” を見てください。
+
+1. https://www.python.org/downloads/windows/ から **3.13.x** の **Windows installer (64-bit)** だけ選びます。
+2. 最初の画面の一番下 **Add python.exe to PATH** を**必ずオン**にします。
+3. **Install Now**。管理者確認が出たら許可します。
+4. すでに開いているコマンドプロンプトは**閉じて、新しい窓**を開きます（PATH が古い窓に残ることがあります）。
+
+確認: スタートで `cmd` と検索し、**コマンドプロンプト**で:
+
+```
+py -3.13 --version
+```
+
+`Python 3.13.` が出れば成功です。`py` が無いときは PATH を入れていません。インストーラの **Modify → Add Python to PATH**、または削除して入れ直してください。
+
+### 5. `phoneme-aligner-int8.onnx` を作る
+
+**コマンドプロンプト**で**1行ずつ**実行します。例示の `xyz` や `path/to/venv` はコピーしないでください。PowerShell の `$env:...` や `Activate.ps1` と混ぜないでください。
 
 ```
 cd %USERPROFILE%\Downloads\DCinVox-windows-x64
+dir export_aligner.py
+```
+
+`export_aligner.py` が見える必要があります。無いときは、展開した本当のフォルダへ `cd` を直します（エクスプローラーのアドレスバーをクリックするとパスが出ます）。
+
+続けて:
+
+```
 py -3.13 -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\activate.bat
+```
+
+先頭に `(.venv)` が出たら:
+
+```
 python -m pip install -r aligner-requirements.txt
 python export_aligner.py facebook/wav2vec2-xlsr-53-espeak-cv-ft .\models
 ```
 
-### 4. 実行
+zip に `requirements.txt` しか無いときはその名前を使います。
 
-`dcinvox.exe` を開きます。Windows 10 では WebView2 が必要なことがあります。
+初回はダウンロードのため時間がかかります。終わると `models\phoneme-aligner-int8.onnx`（数百 MB）ができます。
+
+`pipx install torch` は使わないでください。Store の Python や 3.15 で作った `.venv` は消して、3.13 で**新しく**作ってください。古い venv はバージョンが変わりません。
+
+### 6. 起動
+
+`dcinvox.exe` を開きます。解析には `models\` に次の3つが必要です。
+
+- `ggml-large-v3-q5_0.bin`
+- `phoneme-aligner-vocab.json`（zip に入っている）
+- `phoneme-aligner-int8.onnx`
+
+窓が**真っ白、またはすぐ閉じる**ときは、Windows 10 では [WebView2 ランタイム](https://developer.microsoft.com/microsoft-edge/webview2/)（Evergreen x64）が必要なことがあります。入れてから開き直してください。
 
 ---
 
 ## できたフォルダ
+
+macOS:
 
 ```
 DCinVox-macos-arm64/
@@ -144,7 +209,20 @@ DCinVox-macos-arm64/
 └─ .venv/                     （変換用）
 ```
 
-Windows は `dcinvox.exe` + `ffmpeg.exe` + 同じ `models\` です。
+Windows:
+
+```
+DCinVox-windows-x64/
+├─ dcinvox.exe
+├─ ffmpeg.exe
+├─ export_aligner.py
+├─ aligner-requirements.txt   （または requirements.txt）
+├─ models\
+│  ├─ ggml-large-v3-q5_0.bin
+│  ├─ phoneme-aligner-int8.onnx
+│  └─ phoneme-aligner-vocab.json
+└─ .venv\                     （変換用）
+```
 
 ---
 
@@ -160,7 +238,7 @@ DCinVox.app/Contents/MacOS/dcinvox --self-check
 dcinvox.exe --self-check
 ```
 
-`ffmpeg: … OK` が出れば ffmpeg は準備できています。モデル3つがまだなら `SELF-CHECK FAILED` は正常です。**何も出さずに終わる**ときは `xattr -cr DCinVox.app` をやり直します。
+`ffmpeg: … OK` が出れば ffmpeg は準備できています。モデル3つがまだなら `SELF-CHECK FAILED` は正常です。**何も出さずに終わる**ときは、macOS は `xattr -cr DCinVox.app` をやり直します。Windows では **コマンドプロンプト**で `dcinvox.exe` があるフォルダへ `cd` してください。
 
 読み込むファイルの権利は利用者の責任です。[EULA.ja.md](EULA.ja.md)
 
@@ -177,8 +255,15 @@ dcinvox.exe --self-check
 | `numpy` が無い | pip が失敗したあとスクリプトを実行した。先に torch/venv を直す |
 | `pipx` で torch が失敗 | pipx は用途が違う。`.venv` + `pip install -r aligner-requirements.txt` |
 | ggml が無い | アプリ**横**の `models/` か、名前と約 1GB か |
-| onnx だけ無い | zip に無い。手順 4 を `./models` 向けに実行 |
+| onnx だけ無い | zip に無い。macOS 手順 4 / Windows 手順 5 を `models` 向けに実行 |
 | 変換が長い | 初回は Hugging Face から取得します。終わるまで待つ |
+| Windows によって PC が保護されました / SmartScreen | **詳細情報 → 実行**。未署名のビルドだからです |
+| `Python was not found` / Store が開く | Store の偽 python です。python.org の **3.13** を **Add to PATH** 付きで入れる。設定 → アプリ実行エイリアスで `python.exe` をオフにしてもよい |
+| `py` が見つからない | インストール時に PATH を入れていません。Modify するか入れ直し。**新しい**コマンドプロンプトを開く |
+| PowerShell で `Activate.ps1` が実行できない | **コマンドプロンプト**と `.venv\Scripts\activate.bat` を使う |
+| `%USERPROFILE%` が展開されない | PowerShell に cmd の変数を書いた。cmd を使うか、PowerShell なら `cd $env:USERPROFILE\Downloads\DCinVox-windows-x64` |
+| 白い画面 / 起動しない | [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) Evergreen x64 を入れる |
+| Windows で ffmpeg / 動画エラー | `dcinvox.exe` だけ移した。`ffmpeg.exe` を**同じフォルダ**に置く |
 
 ---
 
